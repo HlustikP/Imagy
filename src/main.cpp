@@ -6,6 +6,7 @@
 #include "gil/extension/io/bmp.hpp"
 
 #include <vector>
+#include <iterator>
 
 namespace gil = boost::gil;
 
@@ -37,20 +38,9 @@ int main(int argc, const char* argv[]) {
 
 	std::cout << std::endl << info << " " << width << " " << height;
 
-	std::vector<gil::rgb8_pixel_t> buffer;
-
-	for (auto i = 0; i < 361200; i=i+3)
-	{
-		//							r				g				b
-		buffer.push_back({ *(rgb + i), *(rgb + i + 1), *(rgb + i + 2) });
-	}
-
-	std::cout << std::endl << "vector length: " << buffer.size();
-
 	auto view2 = gil::interleaved_view(400, 
 		301,
-		&buffer[0],
-		//buffer,
+		reinterpret_cast<gil::rgb8_pixel_t*>(rgb),
 		1200
 		);
 

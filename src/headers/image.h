@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include <regex>
+#include <filesystem>
 
 #include "decode.h"
 #include "gil.hpp"
@@ -11,9 +13,10 @@
 
 namespace gil = boost::gil;
 
-// TODO:Create own namespace for this and the utils lib
+namespace image
+{
 
-const enum colorModel
+const enum ColorModel
 {
 	RGB,
 	BGR,
@@ -21,13 +24,31 @@ const enum colorModel
 	BGRA
 };
 
+const enum ImgFormat
+{
+	BMP,
+	JPG,
+	PNG,
+	WEBP,
+
+	// always have this as last entry
+	INVALID = 99,
+};
+
 class Image
 {
 public:
-	Image(std::string filename);
-	Image(std::vector<uint8_t> data, colorModel);
+	Image(std::string& filename);
+	Image(std::vector<uint8_t> data, ColorModel); // NOT YET IMPLEMENTED
 
 	// maybe destructor for filestream etc closure here?
 private:
+	ImgFormat GetFileExtension(std::string& filename);
+	int	LoadImgData(std::string& filename);
 	
+	ImgFormat format_;
+	std::vector<uint8_t> data_;
+	int length_;
 };
+
+} // namespace image

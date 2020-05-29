@@ -2,74 +2,67 @@
 
 namespace utils {
 
-FileIO::FileIO(std::string filename)
-{
-	auto data = getDataFromFile(filename);
+FileIO::FileIO(std::string filename) {
+	auto* data = GetDataFromFile(filename);
 };
 
-char* FileIO::getDataFromFile(std::string filename, int* length)
-{
-	std::ifstream inputFile;
-	inputFile.open(filename, std::ios::binary);
+/*  Loads binary data from file specified by filename
+    Writes size of data buffer into length int reference if provided
+    Returns pointer to dynamic char array containing the data */
+char* FileIO::GetDataFromFile(std::string filename, int* length) {
+	std::ifstream input_file;
+	input_file.open(filename, std::ios::binary);
 
-	if (!inputFile)
-	{
+	if (!input_file) {
 		std::cerr << "Cannot open input file" << std::endl;
 		return nullptr;
 	}
 
 	// get length of file:
-	inputFile.seekg(0, inputFile.end);
-	auto size = inputFile.tellg();
+	input_file.seekg(0, input_file.end);
+	const auto size = input_file.tellg();
 
 	// tellg() returns -1 if it fails
-	if (size == -1)
-	{
+	if (size == -1) {
 		std::cerr << "Cannot tellg() file content length" << std::endl;
 		return nullptr;
 	}
 
 	// if length pointer is given, write length data into referenced space
-	if (length != nullptr)
-	{
+	if (length != nullptr) {
 		*length = size;
 	}
 
 
-	inputFile.seekg(0, inputFile.beg);
-	char* buffer = new char[size];
+	input_file.seekg(0, input_file.beg);
+	auto* buffer = new char[size];
 	std::cout << "Reading " << size << " characters... ";
 
 	// read data as a block:
-	inputFile.read(buffer, size);
+	input_file.read(buffer, size);
 
-	if (inputFile)
-	{
+	if (input_file) {
 		std::cout << "all characters read successfully.";
 	}
-	else
-	{
-		std::cerr << "error: only " << inputFile.gcount() << " could be read";
+	else {
+		std::cerr << "error: only " << input_file.gcount() << " could be read";
 	}
 
-	// Ab in den Destruktor ?
-	inputFile.close();
+	input_file.close();
 	return buffer;
-
-	// delete[] buffer;
 };
 
-int FileIO::writeToFile(char* data, std::string filename, int length)
-{
-	std::ofstream outputFile(filename, std::ios::binary);
+/*  Creates or overrides file with data, uses binary outstream
+    returns 0 on success and 1 on error */
+int FileIO::WriteToFile(char* data, std::string filename, int length) {
+	std::ofstream output_file(filename, std::ios::binary);
 
-	if (!outputFile)
-	{
+	if (!output_file) {
 		std::cerr << "Cannot open input file";
 		return 1;
 	}
 
-	outputFile.write(data, length);
+	output_file.write(data, length);
 	return 0;
 };
 

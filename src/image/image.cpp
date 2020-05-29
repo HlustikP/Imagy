@@ -3,40 +3,43 @@
 namespace image
 {
 
-Image::Image(std::string& filename)
-{
+Image::Image(std::string& filename) {
 	format_ = GetFileExtension(filename);
-};
-
-Image::Image(std::vector<uint8_t> data, ColorModel)
-{
+	if(LoadImgData(filename) == 1)
+	{
+		throw "Error while loading Image data";
+	}
 	
 };
 
-ImgFormat Image::GetFileExtension(std::string& filename)
-{
+Image::Image(std::vector<uint8_t> data, ColorModel) {
+	
+};
+ 
+/*  Checks file extension of filename file against known ones
+    Returns ImgFormat::INVALID if its unknown or cant be read */
+ImgFormat Image::GetFileExtension(std::string& filename) {
 	const std::filesystem::path path = filename;
-	if(!path.has_extension())
-	{
+
+	if(!path.has_extension()) {
 		return INVALID;
 	}
 
 	// spamming if-checks because switch is illegal with string types
-	if (path.extension() == ".bmp" || path.extension() == "dib")
-	{
+	if (path.extension() == ".bmp" || path.extension() == "dib") {
 		return BMP;
 	}
+
 	if (path.extension() == ".jpg" || path.extension() == ".jpeg" || path.extension() == "jpe"
-		|| path.extension() == "jif" || path.extension() == "jfif" || path.extension() == "jfi")
-	{
+		|| path.extension() == "jif" || path.extension() == "jfif" || path.extension() == "jfi") {
 		return JPG;
 	}
-	if (path.extension() == ".png")
-	{
+
+	if (path.extension() == ".png") {
 		return PNG;
 	}
-	if (path.extension() == ".webp")
-	{
+
+	if (path.extension() == ".webp") {
 		return WEBP;
 	}
 
@@ -44,9 +47,8 @@ ImgFormat Image::GetFileExtension(std::string& filename)
 };
 
 /*	Load image data into data_ member;
-	return 0 on success and 1 on error */
-int Image::LoadImgData(std::string& filename)
-{
+	  returns 0 on success and 1 on error */
+int Image::LoadImgData(std::string& filename) {
 	switch(format_) {
 		case BMP:
 			break;
@@ -54,11 +56,15 @@ int Image::LoadImgData(std::string& filename)
 			break;
 		case PNG:
 			break;
-		case WEBP:
+		case WEBP: {
+			auto* file_data = utils::FileIO::GetDataFromFile(filename, &length_);
 			std::memmove(&data_[0],
-				reinterpret_cast<uint8_t*>(utils::FileIO::getDataFromFile("1_webp_ll.webp", &length_)),
+				reinterpret_cast<uint8_t*>(file_data),
 				length_);
+			delete[] file_data;
+			file_data = nullptr;
 			break;
+		}
 		default:
 			return 1;
 	}

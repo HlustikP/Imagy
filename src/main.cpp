@@ -16,8 +16,8 @@ int main(int argc, const char* argv[]) {
 
 	int length = 0;
 	
-	auto data = utils::FileIO::getDataFromFile("1_webp_ll.webp", &length);
-	utils::FileIO::writeToFile(data, "test2.webp", length);
+	auto* data = utils::FileIO::GetDataFromFile("1_webp_ll.webp", &length);
+	utils::FileIO::WriteToFile(data, "test2.webp", length);
 
 	int width = 0;
 	int height = 0;
@@ -34,11 +34,12 @@ int main(int argc, const char* argv[]) {
 	}
 	gil::write_view("image.png", v, gil::png_tag());
 
-	auto rgb = WebPDecodeRGB(reinterpret_cast<uint8_t*>(data), length, &width, &height);
+	auto* rgb = WebPDecodeRGB(reinterpret_cast<uint8_t*>(data), length, &width, &height);
 
 	std::cout << std::endl << info << " " << width << " " << height;
 
-	auto view2 = gil::interleaved_view(400, 
+	const auto view2 = gil::interleaved_view(
+		400, 
 		301,
 		reinterpret_cast<gil::rgb8_pixel_t*>(rgb),
 		1200
@@ -49,7 +50,7 @@ int main(int argc, const char* argv[]) {
 	gil::write_view("test_from_webp.bmp", view2, gil::bmp_tag());
 
 	WebPBitstreamFeatures features;
-	auto result = WebPGetFeatures(reinterpret_cast<uint8_t*>(data), length, &features);
+	const auto result = WebPGetFeatures(reinterpret_cast<uint8_t*>(data), length, &features);
 
 	// VP8StatusCode enum wrappen and errors ausgeben
 

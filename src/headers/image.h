@@ -37,6 +37,7 @@ class Image {
 public:
 	Image(std::string& filename);
 	Image(std::vector<uint8_t> data, ColorModel); // NOT YET IMPLEMENTED
+	int WriteImgToFile(std::string& filename, ImgFormat format);
 
 	// maybe destructor for filestream etc closure here?
 private:

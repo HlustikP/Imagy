@@ -12,13 +12,13 @@ namespace gil = boost::gil;
 
 int main(int argc, const char* argv[]) {
 
-	//std::ifstream stream(argv[1], std::ios::binary);
+	std::string filename = "1_webp_ll.webp";
+	std::string out = "test_gubbel.webp";
 
-	int length = 0;
+	image::Image img(filename);
+	img.WriteImgToFile(out, image::WEBP);
 	
-	auto* data = utils::FileIO::GetDataFromFile("1_webp_ll.webp", &length);
-	utils::FileIO::WriteToFile(data, "test2.webp", length);
-
+	/*
 	int width = 0;
 	int height = 0;
 
@@ -55,6 +55,7 @@ int main(int argc, const char* argv[]) {
 	// VP8StatusCode enum wrappen and errors ausgeben
 
 	std::cout << std::endl << result << " " << features.width << " " << features.height;
+	*/
 	
 	std::cin.get();
 	return 0;

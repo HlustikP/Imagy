@@ -5,8 +5,7 @@ namespace image
 
 Image::Image(std::string& filename) {
 	format_ = GetFileExtension(filename);
-	if(LoadImgData(filename) == 1)
-	{
+	if(LoadImgData(filename) == 1) {
 		throw "Error while loading Image data";
 	}
 	
@@ -38,7 +37,7 @@ ImgFormat Image::GetFileExtension(std::string& filename) {
 	if (path.extension() == ".png") {
 		return PNG;
 	}
-
+  
 	if (path.extension() == ".webp") {
 		return WEBP;
 	}
@@ -58,7 +57,8 @@ int Image::LoadImgData(std::string& filename) {
 			break;
 		case WEBP: {
 			auto* file_data = utils::FileIO::GetDataFromFile(filename, &length_);
-			std::memmove(&data_[0],
+			data_.reserve(length_);
+			std::memcpy(&data_[0],
 				reinterpret_cast<uint8_t*>(file_data),
 				length_);
 			delete[] file_data;
@@ -67,6 +67,20 @@ int Image::LoadImgData(std::string& filename) {
 		}
 		default:
 			return 1;
+	}
+
+	return 0;
+};
+
+/*  TODO: Check format and convert according to it
+    Writes data_ into a file specified with filename
+    returns 0 on success and 1 on error */
+int Image::WriteImgToFile(std::string& filename, ImgFormat format) {
+  // no conversion needed
+	if (format == format_) {
+		return utils::FileIO::WriteToFile(reinterpret_cast<char*>(&data_[0]),
+			filename,
+			length_);
 	}
 
 	return 0;

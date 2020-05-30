@@ -34,19 +34,11 @@ char* FileIO::GetDataFromFile(std::string filename, int* length) {
 	}
 
 
-	input_file.seekg(0, input_file.beg);
+	input_file.seekg(0, std::ifstream::beg);
 	auto* buffer = new char[size];
-	std::cout << "Reading " << size << " characters... ";
 
 	// read data as a block:
 	input_file.read(buffer, size);
-
-	if (input_file) {
-		std::cout << "all characters read successfully.";
-	}
-	else {
-		std::cerr << "error: only " << input_file.gcount() << " could be read";
-	}
 
 	input_file.close();
 	return buffer;

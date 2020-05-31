@@ -92,4 +92,20 @@ int Image::WriteImgToFile(std::string& filename, ImgFormat format) {
 	return 0;
 };
 
+/* Getter for the data length_ property */
+int Image::GetLength() const {
+	return length_;
+}
+
+/* Getter for the height_ property */
+int Image::GetHeight() const {
+	return height_;
+}
+
+/* Getter for the width_ property */
+int Image::GetWidth() const {
+	return width_;
+}
+
+
 } // namespace image

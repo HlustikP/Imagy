@@ -9,7 +9,7 @@ FileIO::FileIO(std::string filename) {
 /*  Loads binary data from file specified by filename
     Writes size of data buffer into length int reference if provided
     Returns pointer to dynamic char array containing the data */
-char* FileIO::GetDataFromFile(std::string filename, int* length) {
+char* FileIO::GetDataFromFile(std::string& filename, int* length) {
 	std::ifstream input_file;
 	input_file.open(filename, std::ios::binary);
 

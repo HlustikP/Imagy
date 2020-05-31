@@ -17,6 +17,11 @@ int main(int argc, const char* argv[]) {
 
 	image::Image img(filename);
 	img.WriteImgToFile(out, image::WEBP);
+
+  // makeshift unit tests
+	std::cout << img.GetHeight() << std::endl;
+	std::cout << img.GetWidth() << std::endl;
+	std::cout << img.GetLength() << std::endl;
 	
 	/*
 	int width = 0;

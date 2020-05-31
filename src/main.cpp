@@ -23,7 +23,7 @@ int main(int argc, const char* argv[]) {
 	int height = 0;
 
 	const auto info = WebPGetInfo(reinterpret_cast<uint8_t*>(data), length, &width, &height);
-
+  
 	gil::rgb8_image_t img(100, 100);
 	auto v = gil::view(img);
 	auto b = v.begin();

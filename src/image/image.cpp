@@ -58,11 +58,17 @@ int Image::LoadImgData(std::string& filename) {
 		case WEBP: {
 			auto* file_data = utils::FileIO::GetDataFromFile(filename, &length_);
 			data_.reserve(length_);
-			std::memcpy(&data_[0],
-				reinterpret_cast<uint8_t*>(file_data),
-				length_);
+
+			std::copy(reinterpret_cast<uint8_t*>(file_data),
+				reinterpret_cast<uint8_t*>(file_data) + length_,
+				data_.begin());
 			delete[] file_data;
 			file_data = nullptr;
+
+			if (!WebPGetInfo(&data_[0], length_, &width_, &height_)) {
+				return 1;
+			}
+
 			break;
 		}
 		default:

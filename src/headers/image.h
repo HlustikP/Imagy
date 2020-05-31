@@ -35,18 +35,20 @@ const enum ImgFormat {
 
 class Image {
 public:
-	Image(std::string& filename);
-	Image(std::vector<uint8_t> data, ColorModel); // NOT YET IMPLEMENTED
-	int WriteImgToFile(std::string& filename, ImgFormat format);
+  Image(std::string& filename);
+  Image(std::vector<uint8_t> data, ColorModel); // NOT YET IMPLEMENTED
+  int WriteImgToFile(std::string& filename, ImgFormat format);
 
-	// maybe destructor for filestream etc closure here?
+  // maybe destructor for filestream etc closure here?
 private:
-	static ImgFormat GetFileExtension(std::string& filename);
-	int	LoadImgData(std::string& filename);
-	
-	ImgFormat format_;
-	std::vector<uint8_t> data_;
-	int length_;
+  static ImgFormat GetFileExtension(std::string& filename);
+  int LoadImgData(std::string& filename);
+
+  ImgFormat format_;
+  std::vector<uint8_t> data_;
+  int length_ = 0;
+  int height_ = 0;
+  int width_ = 0;
 };
 
 } // namespace image

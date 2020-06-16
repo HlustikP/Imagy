@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include "decode.h"
+#include "encode.h"
 #include "gil.hpp"
 #include "gil/extension/io/png.hpp"
 #include "gil/extension/io/jpeg.hpp"
@@ -47,10 +48,12 @@ public:
   // maybe destructor for filestream etc closure here?
 private:
   static ImgFormat GetFileExtension(std::string& filename);
-  int LoadImgData(std::string& filename);
+  int LoadImgData(std::string& filename, ImgFormat format);
+  int Convert(ImgFormat out_format);
 
-  ImgFormat format_;
+  // rgb(a) data
   std::vector<uint8_t> data_;
+  bool alpha_;
   int length_ = 0;
   int height_ = 0;
   int width_ = 0;

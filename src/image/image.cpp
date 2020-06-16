@@ -4,8 +4,11 @@ namespace image
 {
 
 Image::Image(std::string& filename) {
-	format_ = GetFileExtension(filename);
-	if(LoadImgData(filename) == 1) {
+	ImgFormat format = GetFileExtension(filename);
+
+  //TODO: set alpha channel member
+
+	if(LoadImgData(filename, format) == 1) {
 		throw "Error while loading Image data";
 	}
 	
@@ -25,6 +28,7 @@ ImgFormat Image::GetFileExtension(std::string& filename) {
 	}
 
 	// spamming if-checks because switch is illegal with string types
+  // TODO: find alternative check method
 	if (path.extension() == ".bmp" || path.extension() == "dib") {
 		return BMP;
 	}
@@ -45,10 +49,10 @@ ImgFormat Image::GetFileExtension(std::string& filename) {
 	return INVALID;
 };
 
-/*	Load image data into data_ member;
+/*	Load image data into data_ as interleaved rbg or rgba vector;
 	  returns 0 on success and 1 on error */
-int Image::LoadImgData(std::string& filename) {
-	switch(format_) {
+int Image::LoadImgData(std::string& filename, ImgFormat format) {
+	switch(format) {
 		case BMP:
 			break;
 		case JPG:
@@ -59,15 +63,19 @@ int Image::LoadImgData(std::string& filename) {
 			auto* file_data = utils::FileIO::GetDataFromFile(filename, &length_);
 			data_.reserve(length_);
 
-			std::copy(reinterpret_cast<uint8_t*>(file_data),
-				reinterpret_cast<uint8_t*>(file_data) + length_,
-				data_.begin());
+			WebPDecoderConfig config;
+			WebPGetFeatures(reinterpret_cast<uint8_t*>(file_data), length_, &config.input);
+			alpha_ = config.input.has_alpha;
+
+			auto* decoded = alpha_ ? 
+				WebPDecodeRGBA(reinterpret_cast<uint8_t*>(file_data), length_, &width_, &height_) :
+				WebPDecodeRGB(reinterpret_cast<uint8_t*>(file_data), length_, &width_, &height_);
+
+			std::copy(decoded,decoded + length_,data_.begin());
+
+			WebPFree(decoded);
 			delete[] file_data;
 			file_data = nullptr;
-
-			if (!WebPGetInfo(&data_[0], length_, &width_, &height_)) {
-				return 1;
-			}
 
 			break;
 		}
@@ -79,18 +87,48 @@ int Image::LoadImgData(std::string& filename) {
 };
 
 /*  TODO: Check format and convert according to it
-    Writes data_ into a file specified with filename
+    Encodes and writes data_ into a file specified with filename
     returns 0 on success and 1 on error */
 int Image::WriteImgToFile(std::string& filename, ImgFormat format) {
-  // no conversion needed
-	if (format == format_) {
-		return utils::FileIO::WriteToFile(reinterpret_cast<char*>(&data_[0]),
-			filename,
-			length_);
+	switch (format) {
+	case BMP:
+		break;
+	case JPG:
+		break;
+	case PNG:
+		break;
+	case WEBP:
+		auto* out_data = new uint8_t[];
+		const auto out_length = alpha_ ?
+			WebPEncodeRGBA(&data_[0], width_, height_, width_ * 4, 100, &out_data) :
+			WebPEncodeRGB(&data_[0], width_, height_, width_ * 3, 100, &out_data);
+
+		utils::FileIO::WriteToFile(reinterpret_cast<char*>(out_data), filename, out_length);
+		delete[] out_data;
+		break;
+	default:
+		return 1;
 	}
 
 	return 0;
 };
+
+int Image::Convert(ImgFormat out_format) {
+	switch (out_format) {
+	case BMP:
+		break;
+	case JPG:
+		break;
+	case PNG:
+		break;
+	case WEBP:
+		break;
+	default:
+		return 1;
+	}
+	return 0;
+}
+
 
 /* Getter for the data length_ property */
 int Image::GetLength() const {

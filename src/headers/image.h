@@ -49,7 +49,9 @@ public:
 private:
   static ImgFormat GetFileExtension(std::string& filename);
   int LoadImgData(std::string& filename, ImgFormat format);
-  int Convert(ImgFormat out_format);
+
+  int Decode(ImgFormat in_format, uint8_t* data, int in_length);
+  int Encode(ImgFormat out_format, uint8_t** out_data, int& out_length);
 
   // rgb(a) data
   std::vector<uint8_t> data_;

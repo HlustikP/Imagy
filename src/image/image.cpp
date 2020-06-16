@@ -6,8 +6,6 @@ namespace image
 Image::Image(std::string& filename) {
 	ImgFormat format = GetFileExtension(filename);
 
-  //TODO: set alpha channel member
-
 	if(LoadImgData(filename, format) == 1) {
 		throw "Error while loading Image data";
 	}
@@ -60,16 +58,22 @@ int Image::LoadImgData(std::string& filename, ImgFormat format) {
 		case PNG:
 			break;
 		case WEBP: {
-			auto* file_data = utils::FileIO::GetDataFromFile(filename, &length_);
-			data_.reserve(length_);
+			auto webp_length = 0;
+			auto* file_data = utils::FileIO::GetDataFromFile(filename, &webp_length);
 
 			WebPDecoderConfig config;
-			WebPGetFeatures(reinterpret_cast<uint8_t*>(file_data), length_, &config.input);
+			WebPGetFeatures(reinterpret_cast<uint8_t*>(file_data), webp_length, &config.input);
 			alpha_ = config.input.has_alpha;
+			const auto channel_count = alpha_ ? 4 : 3;
 
 			auto* decoded = alpha_ ? 
-				WebPDecodeRGBA(reinterpret_cast<uint8_t*>(file_data), length_, &width_, &height_) :
-				WebPDecodeRGB(reinterpret_cast<uint8_t*>(file_data), length_, &width_, &height_);
+				WebPDecodeRGBA(reinterpret_cast<uint8_t*>(file_data), webp_length, &width_, &height_) :
+				WebPDecodeRGB(reinterpret_cast<uint8_t*>(file_data), webp_length, &width_, &height_);
+
+      // interleaved rgb(a) stores an amount of bytes equal to the amount of channels times the amount of pixels
+			length_ = width_ * height_ * channel_count;
+
+			data_.reserve(length_);
 
 			std::copy(decoded,decoded + length_,data_.begin());
 
@@ -97,15 +101,17 @@ int Image::WriteImgToFile(std::string& filename, ImgFormat format) {
 		break;
 	case PNG:
 		break;
-	case WEBP:
-		auto* out_data = new uint8_t[];
+	case WEBP: {
+		uint8_t* out_data = nullptr;
+
 		const auto out_length = alpha_ ?
 			WebPEncodeRGBA(&data_[0], width_, height_, width_ * 4, 100, &out_data) :
 			WebPEncodeRGB(&data_[0], width_, height_, width_ * 3, 100, &out_data);
 
 		utils::FileIO::WriteToFile(reinterpret_cast<char*>(out_data), filename, out_length);
-		delete[] out_data;
+		WebPFree(out_data);
 		break;
+	}
 	default:
 		return 1;
 	}

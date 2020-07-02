@@ -26,7 +26,7 @@ const enum ColorModel {
 
 const enum ImgFormat {
 	BMP,
-	JPG,
+	JPEG,
 	PNG,
 	WEBP,
 
@@ -50,7 +50,13 @@ private:
   static ImgFormat GetFileExtension(std::string& filename);
   int LoadImgData(std::string& filename, ImgFormat format);
 
-  int Decode(ImgFormat in_format, uint8_t* data, int in_length);
+  int DecodeWebP(uint8_t* data, int in_length);
+  int DecodePng(gil::rgb8_image_t image, std::string& filename);
+  int DecodePng(gil::rgba8_image_t image, std::string& filename);
+  int DecodeJpeg(gil::rgb8_image_t image, std::string& filename);
+  int DecodeBmp(gil::rgb8_image_t image, std::string& filename);
+  int DecodeBmp(gil::rgba8_image_t image, std::string& filename);
+
   int Encode(ImgFormat out_format, uint8_t** out_data, int& out_length);
 
   // rgb(a) data

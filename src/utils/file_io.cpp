@@ -8,7 +8,7 @@ FileIO::FileIO(std::string filename) {
 
 /*  Loads binary data from file specified by filename
     Writes size of data buffer into length int reference if provided
-    Returns pointer to dynamic char array containing the data 
+    Returns pointer to heap allocated char array containing the data 
 	and nullptr on error											*/
 char* FileIO::GetDataFromFile(std::string& filename, int* length) {
 	std::ifstream input_file;

@@ -7,13 +7,12 @@ Image::Image(std::string& filename) {
 	ImgFormat format = GetFileExtension(filename);
 
 	if(LoadImgData(filename, format) == 1) {
-		throw "Error while loading Image data";
-	}
-	
+		err_ = "Error while loading image data";
+	}	
 };
 
 Image::Image(std::vector<uint8_t> data, ColorModel) {
-	
+
 };
  
 /*  Checks file extension of filename file against known ones
@@ -138,27 +137,44 @@ int Image::LoadImgData(std::string& filename, ImgFormat format) {
 };
 
 /*  Encodes and writes data_ into a file specified with filename
-    returns 0 on success and 1 on error */
+    returns 0 on success, 1 on encoding error and 2 on format error */
 int Image::WriteImgToFile(std::string& filename, ImgFormat format) {
 	switch (format) {
-	case BMP:
+	case BMP: {
+		const auto byte_rowsize = alpha_ ? width_ * 4 : width_ * 3;
+		const auto view = gil::interleaved_view(width_, height_, reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
+		gil::write_view(filename, view, gil::bmp_tag());
 		break;
-	case JPEG:
+	}
+	case JPEG: {
+		const auto byte_rowsize = width_ * 3;
+		const auto view = gil::interleaved_view(width_, height_, reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
+		gil::write_view(filename, view, gil::jpeg_tag());
 		break;
-	case PNG:
+	}
+	case PNG: {
+		const auto byte_rowsize = alpha_ ? width_ * 4 : width_ * 3;
+		const auto view = gil::interleaved_view(width_, height_, reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
+		gil::write_view(filename, view, gil::png_tag());
 		break;
+	}
 	case WEBP: {
 		uint8_t* out_data = nullptr;
 		auto out_length = 0;
 
-		Encode(format, &out_data, out_length);
+		// Encode() return 1 or more on error, so return if that happens
+		if (Encode(&out_data, out_length)) {
+			err_ = "Error while encoding image";
+			return 1;
+		}
+
 		utils::FileIO::WriteToFile(reinterpret_cast<char*>(out_data), filename, out_length);
 
 		WebPFree(out_data);
 		break;
 	}
 	default:
-		return 1;
+		return 2;
 	}
     
 	return 0;
@@ -179,10 +195,8 @@ int Image::DecodeWebP(uint8_t* data, int in_length) {
 
 	// interleaved rgb(a) stores an amount of bytes equal to the amount of channels times the amount of pixels
 	length_ = width_ * height_ * channel_count;
+	data_.assign(decoded, decoded + length_);
 
-	data_.reserve(length_);
-
-	std::copy(decoded, decoded + length_, data_.begin());
 	WebPFree(decoded);
 	return 0;
 }
@@ -287,24 +301,16 @@ int Image::DecodeBmp(gil::rgba8_image_t image, std::string& filename) {
 	return 0;
 }
 
-int Image::Encode(ImgFormat out_format, uint8_t** out_data, int& out_length) {
-	switch (out_format) {
-	case BMP:
-		break;
-	case JPEG:
-		break;
-	case PNG:
-		break;
-	case WEBP: {
-		out_length = alpha_ ?
-			WebPEncodeRGBA(&data_[0], width_, height_, width_ * 4, 100, out_data) :
-			WebPEncodeRGB(&data_[0], width_, height_, width_ * 3, 100, out_data);
-		break;
-	}
-	default:
-		return 1;
-	}
-	return 0;
+/* Encoding method for WebP only 
+	writes data into array pointed to by out_data
+	and the data length into the out_length out parameter
+	returns 0 on success and 1 on error*/
+int Image::Encode(uint8_t** out_data, int& out_length) {
+	out_length = alpha_ ?
+		WebPEncodeRGBA(&data_[0], width_, height_, width_ * 4, 100, out_data) :
+		WebPEncodeRGB(&data_[0], width_, height_, width_ * 3, 100, out_data);
+	
+	return out_length ? 0 : 1;
 }
 
 /* Getter for the data length_ property */
@@ -320,6 +326,12 @@ int Image::GetHeight() const {
 /* Getter for the width_ property */
 int Image::GetWidth() const {
 	return width_;
+}
+
+/* Getter for the err_ property 
+	returns nullptr if no error */
+std::string Image::GetError() const {
+	return err_;
 }
 
 } // namespace image

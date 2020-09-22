@@ -1,6 +1,7 @@
 #pragma once
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 namespace utils {
 
@@ -12,8 +13,8 @@ public:
 	static int WriteToFile(char* data, std::string filename, int length);
 
 private:
-	char* data;
-	int length;
+	char* _data;
+	int _length;
 };
 
 } // namespace utils

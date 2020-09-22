@@ -3,8 +3,12 @@
 #include <regex>
 #include <filesystem>
 
+// webp
 #include "decode.h"
 #include "encode.h"
+#include "mux.h"
+#include "demux.h"
+// boost::gil
 #include "gil.hpp"
 #include "gil/extension/io/png.hpp"
 #include "gil/extension/io/jpeg.hpp"
@@ -21,7 +25,7 @@ const enum ColorModel {
 	RGB,
 	BGR,
 	RGBA,
-	BGRA
+	BGRA,
 };
 
 const enum ImgFormat {
@@ -29,9 +33,15 @@ const enum ImgFormat {
 	JPEG,
 	PNG,
 	WEBP,
+	GIF,
 
 	// always have this as last entry
 	INVALID = 99,
+};
+
+// Tuple types: Signature in ASCII, Offset of signature begin, corresponding file type
+inline std::vector<std::tuple<std::string, int, ImgFormat>> img_signatures {
+	std::tuple("GIF", 0, GIF)
 };
 
 class Image {
@@ -44,8 +54,8 @@ public:
   int GetLength() const;
   int GetHeight() const;
   int GetWidth() const;
+  std::string GetError() const;
 
-  // maybe destructor for filestream etc closure here?
 private:
   static ImgFormat GetFileExtension(std::string& filename);
   int LoadImgData(std::string& filename, ImgFormat format);
@@ -57,11 +67,16 @@ private:
   int DecodeBmp(gil::rgb8_image_t image, std::string& filename);
   int DecodeBmp(gil::rgba8_image_t image, std::string& filename);
 
-  int Encode(ImgFormat out_format, uint8_t** out_data, int& out_length);
+  // For Encoding into Webp
+  int Encode(uint8_t** out_data, int& out_length);
+
+  std::string err_ = "";
 
   // rgb(a) data
   std::vector<uint8_t> data_;
+
   bool alpha_;
+  bool animated_ = false;
   int length_ = 0;
   int height_ = 0;
   int width_ = 0;

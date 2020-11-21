@@ -6,6 +6,7 @@ DecodeGif::DecodeGif(std::string& filename) {
 	file_ = reinterpret_cast<uint8_t*>(FileIO::GetDataFromFile(filename, &file_length_));
 	ValidateHeader(filename);
 	InitGlobalColorTable();
+	InitImageVectors();
 	IterateThroughFile();
 };
 
@@ -17,7 +18,8 @@ int DecodeGif::ValidateHeader(std::string& filename) {
 	// if _file is still nullptr, return error 1
 	if (!file_) {
 		return 1;
-	} else if (file_length_ < kHeaderSize + 1) {
+	}
+  if (file_length_ < HEADER_SIZE + 1) {
 		// header size is 13 bytes + 1 byte file terminator, so return if we're below that
 		return 2;
 	}
@@ -80,17 +82,27 @@ int DecodeGif::InitGlobalColorTable() {
 	}
 
 	// table size is 2^(X+1) times the amount of base colors (rgb = 3)
-	gct_size_ = pow(2, packed_.table_size + 1) * 3;
+	gct_size_ = static_cast<int>(pow(2, packed_.table_size + 1)) * 3;
 
 	// global color table follows immediately after the header
-	global_color_table_.assign(file_ + kHeaderSize, file_ + gct_size_);
+	global_color_table_.reserve(gct_size_);
+	global_color_table_.assign(file_ + HEADER_SIZE, file_ + HEADER_SIZE + gct_size_);
 
 	return 0;
 }
 
+void DecodeGif::InitImageVectors() {
+	// Pixel count times the number of colors (RGB = 3)
+	const auto memory_size = infos_.width * infos_.height * 3;
+	even_image_.reserve(memory_size);
+	odd_image_.reserve(memory_size);
+
+	code_stream_.reserve(1000);
+}
+
 int DecodeGif::IterateThroughFile() {
 	// skip to the first block after the header-gct-section 
-	auto* current_block = file_ + kHeaderSize + gct_size_;
+	auto* current_block = file_ + HEADER_SIZE + gct_size_;
 
 	// TODO: max iteration count?
 	while (true) {
@@ -100,6 +112,10 @@ int DecodeGif::IterateThroughFile() {
 				if (!(current_block = HandleExtension(current_block))) {
 					return 2;
 				}
+				break;
+			case IMAGE_SEPERATOR:
+				current_block = HandleImageDescriptor(current_block);
+				current_block = HandleImageData(current_block);
 				break;
 			// The TRAILER byte signals end of file
 			case TRAILER:
@@ -196,12 +212,12 @@ uint8_t* DecodeGif::HandleApplication(uint8_t* extension_data) {
 	// The NETSCAPE2.0 application extension is the only known one, so lets assume it is
 
 	// The only interesting byte is the one that holds information about the loop count, with 0 beeing an infinite loop
-	auto LOOP_COUNT_OFFSET = 15;
+	const auto LOOP_COUNT_OFFSET = 15;
 	extension_data += LOOP_COUNT_OFFSET;
 	looping_ = true;
 	loop_count_ = *extension_data;
 
-	// The sub block holds to more bytes, one unused one and one block trailer
+	// The sub block holds two more bytes, one unused one and one block trailer
 	extension_data += 2;
 	if (*extension_data != END_OF_BLOCK) {
 		return nullptr;
@@ -220,14 +236,13 @@ uint8_t* DecodeGif::HandleGraphicControl(uint8_t* extension_data) {
 	extension_data++;
 
 	// Handle Packed Field
-	// bit 1 - 3 can be ignored, they're reserved for future use
-	// bit 4 - 6 represent the disposal method as a 3-bit int
-	std::cout << *extension_data << std::endl;
-	graphic_control_.disposal_method = ((*extension_data) << 2) >> 5;
-	// bit 7 is the user input flag
-	graphic_control_.user_input = (*extension_data) & (1 << 6) == (1 << 6) ? true : false;
-	// bit 8 is the transparency flag
-	graphic_control_.transparency = (*extension_data) & (1 << 7) == (1 << 7) ? true : false;
+	// bit 1 is the transparency flag
+	graphic_control_.transparency = (*extension_data & (1 << 0)) == (1 << 0) ? true : false;
+	// bit 2 is the user input flag
+	graphic_control_.user_input = (*extension_data & (1 << 1)) == (1 << 1) ? true : false;
+	// bit 3 - 5 represent the disposal method as a 3-bit int
+	graphic_control_.disposal_method = ((*extension_data) << 3) >> 5;
+	// bit 6 - 8 can be ignored, they're reserved for future use
 	extension_data++;
 
 	// Handle delay (16-bit int)
@@ -244,6 +259,279 @@ uint8_t* DecodeGif::HandleGraphicControl(uint8_t* extension_data) {
 	return ++extension_data;
 }
 
+uint8_t* DecodeGif::HandleImageDescriptor(uint8_t* block_data) {
+	// Increment to first byte after the Image Seperator
+	block_data++;
+
+	// Handle left position of where the image should begin drawing (16-bit int)
+	image_descriptor_.left_pos = ParseBytes(*block_data, *(block_data + 1));
+	block_data += 2;
+
+	// Handle top position of where the image should begin drawing (16-bit int)
+	image_descriptor_.top_pos = ParseBytes(*block_data, *(block_data + 1));
+	block_data += 2;
+
+	// Handle image width (16-bit int)
+	image_descriptor_.witdh = ParseBytes(*block_data, *(block_data + 1));
+	block_data += 2;
+
+	// Handle image height (16-bit int)
+	image_descriptor_.height = ParseBytes(*block_data, *(block_data + 1));
+	block_data += 2;
+
+	// Handle local Packed Field
+	local_packed_.local_color_table = (*block_data & (1 << 0)) == (1 << 0) ? true : false;
+	local_packed_.interlace = (*block_data & (1 << 1)) == (1 << 1) ? true : false;
+	local_packed_.sorted = (*block_data & (1 << 2)) == (1 << 2) ? true : false;
+	block_data++;
+
+	// There is no block terminator for the Image Descriptor as it is always followed immediately by image data (or local color table if used)
+	return block_data;
+};
+
+uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
+	// TODO: Document this mess
+
+	auto last_pixel = 0;
+
+	// 0-Re-Initialize dictionary
+	std::fill(dictionary_.begin(), dictionary_.end(), 0);
+
+	// The minimum code size is stored inside the first byte of the image data
+	const auto MIN_CODE_SIZE = *block_data;
+	block_data++;
+
+	// The Dictionary's initial size is equal to 2^minimum code size, + 2 for the two special codes (CLEAR and EOI)
+	auto dic_size = (1 << MIN_CODE_SIZE) + 2;
+	base_dic_size_ = dic_size;
+
+	const auto CLEAR = dic_size - 2;
+	const auto EOI = dic_size - 1;
+
+	// Initialize our base dictionary
+	for (auto i = 0; i < dic_size; i++) {
+		dictionary_[i] = (i << LEADING_CODE_SHIFT) | INITIALIZATION_FLAG | (i << APPENDED_CODE_SHIFT);
+	}
+
+	// The first sub-block's size is stored inside the second byte of the image data
+	auto sub_block_size = *block_data;
+
+	// Increment to third byte (First byte containing actual image code data)
+	block_data++;
+
+	// Increment code size by one, because we filled up the dictionary to the full capacity of the previous code
+	auto curr_code_size = MIN_CODE_SIZE + 1;
+
+	auto curr_bit = 0;
+	const auto shift = BYTE_SIZE - curr_code_size;
+
+	// Access second stored code as the first code is always CLEAR
+	auto last_code = static_cast<uint8_t>(*block_data << (BYTE_SIZE - (curr_code_size * 2))) >> shift;
+
+	code_stream_.push_back(last_code);
+	auto buffered_code = dictionary_.at(static_cast<uint8_t>(*block_data << (BYTE_SIZE - (curr_code_size * 2))) >> shift);
+
+	curr_bit = curr_code_size * 2;
+	auto curr_code = 0;
+
+	while (true) {
+		// Increase code size by one bit if current size reaches maximum capacity
+		if (dic_size == static_cast<int>(pow(2, curr_code_size))) {
+			curr_code_size++;
+		}
+
+		// Determine how many bits left and right need to be kicked out via shift to only analyze the current code
+		auto lshift = BYTE_SIZE - curr_code_size - curr_bit;
+		auto rshift = BYTE_SIZE - curr_code_size;
+		if (lshift < 0) {
+			lshift = 0;
+			rshift = curr_bit;
+		}
+		curr_code = static_cast<uint8_t>(static_cast<uint8_t>(*block_data << lshift) >> rshift);
+		curr_bit += curr_code_size;
+
+		// Code handling routine for if the current code doesnt reach the end of the current byte
+		if (curr_bit < 8) {
+			if (curr_code == EOI) {
+				PaintImg(last_pixel, true);
+				break;
+			}
+      // Reset dictionary to it's base state and set code_size back to the initial value
+      if (curr_code == CLEAR) {
+		  last_pixel = PaintImg(last_pixel);
+		    std::fill(dictionary_.begin() + base_dic_size_, dictionary_.end(), 0);
+			  curr_code_size = MIN_CODE_SIZE + 1;
+      }
+			// Check if Dictionary entry has been initialized
+			if ((dictionary_[curr_code] & INITIALIZATION_FLAG) == INITIALIZATION_FLAG) {
+				buffered_code = dictionary_[curr_code];
+			}
+		}
+		// Code handling routine for if the current code ends exactly at the end of the current byte
+		else if (curr_bit == 8) {
+			if (curr_code == EOI) {
+				PaintImg(last_pixel, true);
+				break;
+			}
+			// Reset dictionary to it's base state and set code_size back to the initial value
+			if (curr_code == CLEAR) {
+				last_pixel = PaintImg(last_pixel);
+				std::fill(dictionary_.begin() + base_dic_size_, dictionary_.end(), 0);
+        // resize() calls the omitted element's destructors, changes the vector pointers but leaves the memory reservation in place(so no copying of data)
+				code_stream_.resize(0);
+				curr_code_size = MIN_CODE_SIZE + 1;
+			}
+			block_data++;
+			sub_block_size--;
+      if (sub_block_size == 0) {
+		    sub_block_size = *block_data;
+        if (sub_block_size == 0) {
+          // TODO: Throw warning that the next data sub block is of size 0 but EOI hasnt been reached yet
+			    return ++block_data;
+        }
+		    block_data++;
+      }
+
+			curr_bit = 0;
+
+			// Check if Dictionary entry has been initialized
+			if ((dictionary_[curr_code] & INITIALIZATION_FLAG) == INITIALIZATION_FLAG) {
+				buffered_code = dictionary_[curr_code];
+			}
+		}
+		// Code handling routine for if the current code reaches beyond the end of the current byte
+		else {
+			block_data++;
+			sub_block_size--;
+			if (sub_block_size == 0) {
+				sub_block_size = *block_data;
+				if (sub_block_size == 0) {
+					// TODO: Throw warning that the next data sub block is of size 0 but EOI hasnt been reached yet
+					return ++block_data;
+				}
+				block_data++;
+			}
+
+			const auto remaining_bits = curr_bit - BYTE_SIZE;
+			curr_bit = 0;
+
+			lshift = BYTE_SIZE - remaining_bits - curr_bit;
+			rshift = BYTE_SIZE - remaining_bits;
+			if (lshift < 0) {
+				lshift = 0;
+				rshift = curr_bit;
+			}
+
+			// Having to chain-cast to uint8_t here because otherwise the bits wont be shifted "off the edge"
+			curr_code += static_cast<uint8_t>(static_cast<uint8_t>(static_cast<uint8_t>(*block_data << lshift) >> rshift) << (curr_code_size - remaining_bits));
+
+			curr_bit += remaining_bits;
+
+			if (curr_code == EOI) {
+				PaintImg(last_pixel, true);
+				break;
+			}
+			// Reset dictionary to it's base state and set code_size back to the initial value
+			if (curr_code == CLEAR) {
+				last_pixel = PaintImg(last_pixel);
+				std::fill(dictionary_.begin() + base_dic_size_, dictionary_.end(), 0);
+				curr_code_size = MIN_CODE_SIZE + 1;
+			}
+
+			// Check if Dictionary entry has been initialized
+			if ((dictionary_[curr_code] & INITIALIZATION_FLAG) == INITIALIZATION_FLAG) {
+				buffered_code = dictionary_[curr_code];
+			}
+		}
+		// LZW Decoding Round
+		code_stream_.push_back(curr_code);
+		const auto last_code_first_symbol = (dictionary_[last_code] & (0b1111111 << LEADING_CODE_SHIFT));
+		dictionary_[dic_size] = last_code | last_code_first_symbol | INITIALIZATION_FLAG |
+			((buffered_code & (0b11111111 << LEADING_CODE_SHIFT)) << LEADING_CODE_SHIFT);
+		dic_size++;
+		last_code = curr_code;
+	}
+
+	current_image_++;
+	image_count_++;
+	return block_data + 2;
+}
+
+int DecodeGif::PaintImg(int last_painted_pixel, bool EOI) {
+	// As we paint the Image in reverse, jump to last pixel's index of the current segment
+	auto curr_pixel = (image_descriptor_.height * image_descriptor_.witdh - 1) * 3;
+
+	// Choose our image vector from 2 alternating ones
+  auto* const curr_image = (current_image_ % 2) == 0 ? &even_image_ : &odd_image_;
+  auto* const last_image = (current_image_ % 2) == 0 ? &odd_image_ : &even_image_;
+
+  // Initialize image base during first painting iteration
+  if (last_painted_pixel == 0) {
+	  switch (graphic_control_.disposal_method) {
+		  // Method 0: Do nothing
+	  case 0:
+		  break;
+		  // Method 1: Use the last image as a background to be overwritten
+	  case 1:
+		  *curr_image = *last_image;
+		  break;
+		  // Method 2: Reset Image to the background color
+	  case 2: {
+		  // Pixels are here broken down into their color components, therefore the "* 3"
+		  const auto pixel_count = infos_.width * infos_.height * 3;
+		  const auto background_color = infos_.bg_index;
+		  const auto red = global_color_table_[background_color * 3];
+		  const auto green = global_color_table_[(background_color * 3) + 1];
+		  const auto blue = global_color_table_[(background_color * 3) + 2];
+		  for (auto i = 0; i < pixel_count - 1; i = i + 3) {
+			  (*curr_image)[i] = red;
+			  (*curr_image)[i + 1] = green;
+			  (*curr_image)[i + 2] = blue;
+		  }
+	  }
+			  break;
+			  // If the default is reached, then something's not quite right
+	  default:
+		  break;
+	  }
+  }
+
+	// Calculate starting position, see https://i.imgur.com/7mc5yar.png for an attempt at an explanation
+	auto subpixel = (((image_descriptor_.top_pos * infos_.width) + image_descriptor_.left_pos) +
+					((image_descriptor_.height - 1) * infos_.width) + image_descriptor_.left_pos) * 3;
+    
+	// Note to future self: if the to-be-drawn rectangle isnt as wide as the img, we have to skip all pixels that hang over left/right off the sides!
+
+  // Simplified routine for images encoded entirely within one round
+	if (last_painted_pixel == 0 && EOI) {
+		for (signed int code = code_stream_.size() - 1; code >= 0; code--) {
+			auto curr_code = code_stream_[code];
+			// If we directly read a base code, write corresponding rgb-values into the image and move on to the next code
+			if (curr_code < base_dic_size_) {
+				(*curr_image)[curr_pixel] = global_color_table_[curr_code * 3];
+				(*curr_image)[curr_pixel + 1] = global_color_table_[(curr_code * 3) + 1];
+				(*curr_image)[curr_pixel + 2] = global_color_table_[(curr_code * 3) + 2];
+				curr_pixel -= 3;
+				continue;
+			}
+			// Get the rgb-values from the appended code and dive deeper until we hit a base code
+			while (true) {
+				const auto dic_entry = dictionary_[curr_code];
+				(*curr_image)[curr_pixel] = global_color_table_[((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3];
+				(*curr_image)[curr_pixel + 1] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 1];
+				(*curr_image)[curr_pixel + 2] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 2];
+				curr_pixel -= 3;
+				if (curr_code < base_dic_size_) {
+					break;
+				}
+				curr_code = dic_entry & 0b111111111111;
+			}
+		}
+	}
+
+	return curr_pixel;
+}
+
 GifHeaderInfos DecodeGif::GetInfos() const {
 	return infos_;
 }
@@ -256,9 +544,12 @@ GraphicControl DecodeGif::GetGraphicControl() const {
 	return graphic_control_;
 }
 
-uint16_t DecodeGif::ParseBytes(uint8_t least_sig, uint8_t most_sig) {
-	auto byte_size = 8;
-	return (most_sig << byte_size) + least_sig;
+const std::vector<uint8_t>* DecodeGif::GetImage() const {
+	return &even_image_;
+}
+
+uint16_t DecodeGif::ParseBytes(uint8_t least_sig, uint8_t most_sig) const {
+	return (most_sig << BYTE_SIZE) + least_sig;
 }
 
 } // namespace utils

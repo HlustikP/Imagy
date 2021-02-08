@@ -351,7 +351,7 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 		curr_bit += curr_code_size;
 
 		// Code handling routine for if the current code doesnt reach the end of the current byte
-		if (curr_bit <= 8) {
+		if (curr_bit <= BYTE_SIZE) {
 			if (curr_code == EOI) {
 				PaintImg(last_pixel, true);
 				break;
@@ -364,14 +364,14 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 			}
 
       // Special subroutine to wrap up handling bit-parsing for when the current code ends exactly at the end of the current byte
-      if (curr_bit == 8) {
+      if (curr_bit == BYTE_SIZE) {
         block_data++;
         sub_block_size--;
         if (sub_block_size == 0) {
           sub_block_size = *block_data;
           if (sub_block_size == 0) {
-              // TODO: Throw warning that the next data sub block is of size 0 but EOI hasnt been reached yet
-              return ++block_data;
+            // TODO: Throw warning that the next data sub block is of size 0 but EOI hasnt been reached yet
+            return ++block_data;
           }
           block_data++;
         }
@@ -446,38 +446,38 @@ int DecodeGif::PaintImg(int last_painted_pixel, bool EOI) {
 	auto curr_pixel = (image_descriptor_.height * image_descriptor_.witdh - 1) * 3;
 
 	// Choose our image vector from 2 alternating ones
-    auto* const curr_image = (current_image_ % 2) == 0 ? &even_image_ : &odd_image_;
-    auto* const last_image = (current_image_ % 2) == 0 ? &odd_image_ : &even_image_;
+  auto* const curr_image = (current_image_ % 2) == 0 ? &even_image_ : &odd_image_;
+  auto* const last_image = (current_image_ % 2) == 0 ? &odd_image_ : &even_image_;
 
-    // Initialize image base during first painting iteration
-    if (last_painted_pixel == 0) {
-	    switch (graphic_control_.disposal_method) {
-		    // Method 0: Do nothing
-	    case 0:
-		    break;
-		    // Method 1: Use the last image as a background to be overwritten
-	    case 1:
-		    *curr_image = *last_image;
-		    break;
-		    // Method 2: Reset Image to the background color
-	    case 2: {
-		    // Pixels are here broken down into their color components, therefore the "* 3"
-		    const auto pixel_count = infos_.width * infos_.height * 3;
-		    const auto background_color = infos_.bg_index;
-		    const auto red = global_color_table_[background_color * 3];
-		    const auto green = global_color_table_[(background_color * 3) + 1];
-		    const auto blue = global_color_table_[(background_color * 3) + 2];
-		    for (auto i = 0; i < pixel_count - 1; i = i + 3) {
-			    (*curr_image)[i] = red;
-			    (*curr_image)[i + 1] = green;
-			    (*curr_image)[i + 2] = blue;
-		    }
-	    }
-			break;
-			// If the default is reached, then something's not quite right
-	    default:
-		    break;
-	    }
+  // Initialize image base during first painting iteration
+  if (last_painted_pixel == 0) {
+	  switch (graphic_control_.disposal_method) {
+		  // Method 0: Do nothing
+	  case 0:
+		  break;
+		  // Method 1: Use the last image as a background to be overwritten
+	  case 1:
+		  *curr_image = *last_image;
+		  break;
+		  // Method 2: Reset Image to the background color
+	  case 2: {
+		  // Pixels are here broken down into their color components, therefore the "* 3"
+		  const auto pixel_count = infos_.width * infos_.height * 3;
+		  const auto background_color = infos_.bg_index;
+		  const auto red = global_color_table_[background_color * 3];
+		  const auto green = global_color_table_[(background_color * 3) + 1];
+		  const auto blue = global_color_table_[(background_color * 3) + 2];
+		  for (auto i = 0; i < pixel_count - 1; i = i + 3) {
+			  (*curr_image)[i] = red;
+			  (*curr_image)[i + 1] = green;
+			  (*curr_image)[i + 2] = blue;
+		  }
+	  }
+		break;
+		// If the default is reached, then something's not quite right
+	  default:
+		  break;
+	  }
   }
 
 	// Calculate starting position, see https://i.imgur.com/7mc5yar.png for an attempt at an explanation

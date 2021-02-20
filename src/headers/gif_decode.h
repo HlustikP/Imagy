@@ -68,12 +68,13 @@ struct LocalPacked {
 
 class DecodeGif {
 public:
-	DecodeGif(std::string& filename);
+	DecodeGif(const std::string& filename);
 	~DecodeGif();
 	// DestroyImages(); Implement destructor of images data
 	// on demand decoding = new thread for every image?; generator and call next image with next() + option to just load all images at once
 
 	uint16_t ParseBytes(uint8_t least_sig, uint8_t most_sig) const;
+  uint8_t* ParseOneRound(int curr_code_size, int& curr_bit, int& curr_code, uint8_t& sub_block_size, uint8_t* block_data);
 	GifHeaderInfos GetInfos() const;
 	Packed GetPacked() const;
 	GraphicControl GetGraphicControl() const;
@@ -84,7 +85,7 @@ public:
 	static const int HEADER_SIZE = 13;
 
 private:
-	int ValidateHeader(std::string& filename);
+	int ValidateHeader(const std::string& filename);
 	int FillHeaderInfos();
 	int InitGlobalColorTable();
 	void InitImageVectors();

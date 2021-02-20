@@ -9,7 +9,7 @@ class FileIO {
 public:
 	FileIO();
 	FileIO(std::string filename);
-	static char* GetDataFromFile(std::string& filename, int* length = nullptr);
+	static char* GetDataFromFile(const std::string& filename, int* length = nullptr);
 	static int WriteToFile(char* data, std::string filename, int length);
 
 private:

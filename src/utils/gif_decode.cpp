@@ -2,7 +2,7 @@
 
 namespace utils {
 
-DecodeGif::DecodeGif(std::string& filename) {
+DecodeGif::DecodeGif(const std::string& filename) {
 	file_ = reinterpret_cast<uint8_t*>(FileIO::GetDataFromFile(filename, &file_length_));
 	ValidateHeader(filename);
 	InitGlobalColorTable();
@@ -14,7 +14,7 @@ DecodeGif::~DecodeGif() {
 	delete[] file_;
 };
 
-int DecodeGif::ValidateHeader(std::string& filename) {
+int DecodeGif::ValidateHeader(const std::string& filename) {
 	// if _file is still nullptr, return error 1
 	if (!file_) {
 		return 1;
@@ -323,17 +323,21 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 	auto curr_code_size = MIN_CODE_SIZE + 1;
 
 	auto curr_bit = 0;
+  auto curr_code = 0;
+  auto last_code = 0;
 	const auto shift = BYTE_SIZE - curr_code_size;
 
 	// Access second stored code as the first code is always CLEAR
-	auto last_code = static_cast<uint8_t>(*block_data << (BYTE_SIZE - (curr_code_size * 2))) >> shift;
+  block_data = ParseOneRound(curr_code_size, curr_bit, last_code, sub_block_size, block_data);
+  block_data = ParseOneRound(curr_code_size, curr_bit, last_code, sub_block_size, block_data);
+	//auto last_code = static_cast<uint8_t>(*block_data << (BYTE_SIZE - (curr_code_size * 2))) >> shift;
 
 	code_stream_.push_back(last_code);
-	auto buffered_code = dictionary_.at(static_cast<uint8_t>(*block_data << (BYTE_SIZE - (curr_code_size * 2))) >> shift);
-
-	curr_bit = curr_code_size * 2;
-	auto curr_code = 0;
-
+	auto buffered_code = dictionary_.at(last_code);
+  auto test = 0;
+	//curr_bit = curr_code_size * 2;
+	curr_code = 0;
+  std::cout << (int)block_data << std::endl;
 	while (true) {
 		// Increase code size by one bit if current size reaches maximum capacity
 		if (dic_size == static_cast<int>(pow(2, curr_code_size))) {
@@ -349,7 +353,11 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 		}
 		curr_code = static_cast<uint8_t>(static_cast<uint8_t>(*block_data << lshift) >> rshift);
 		curr_bit += curr_code_size;
-
+    /*std::cout << "Base shifts set up" << std::endl;
+    std::cout << "Current Code:" << curr_code << std::endl;
+    std::cout << "Current Code Size:" << curr_code_size << std::endl;
+    std::cout << "Last Code:" << last_code << std::endl;
+    std::cout << "Clear Code:" << CLEAR << std::endl;*/
 		// Code handling routine for if the current code doesnt reach the end of the current byte
 		if (curr_bit <= BYTE_SIZE) {
 			if (curr_code == EOI) {
@@ -369,9 +377,10 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
         sub_block_size--;
         if (sub_block_size == 0) {
           sub_block_size = *block_data;
+          std::cout << "x" << (int)block_data << "x" << sub_block_size << " ";
           if (sub_block_size == 0) {
             // TODO: Throw warning that the next data sub block is of size 0 but EOI hasnt been reached yet
-            return ++block_data;
+            //return ++block_data;
           }
           block_data++;
         }
@@ -389,9 +398,10 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 			sub_block_size--;
 			if (sub_block_size == 0) {
 				sub_block_size = *block_data;
+        std::cout << "xx" << (int)block_data << "x" << (int)sub_block_size << " ";
 				if (sub_block_size == 0) {
 					// TODO: Throw warning that the next data sub block is of size 0 but EOI hasnt been reached yet
-					return ++block_data;
+					//return ++block_data;
 				}
 				block_data++;
 			}
@@ -407,26 +417,80 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 			}
 
 			// Having to chain-cast to uint8_t here because otherwise the bits wont be shifted "off the edge"
-			curr_code += static_cast<uint8_t>(static_cast<uint8_t>(static_cast<uint8_t>(*block_data << lshift) >> rshift) << (curr_code_size - remaining_bits));
+			curr_code += static_cast<uint8_t>(static_cast<uint8_t>(*block_data << lshift) >> rshift) << (curr_code_size - remaining_bits);
 
 			curr_bit += remaining_bits;
+
+      if (curr_bit > BYTE_SIZE) {
+        block_data++;
+        sub_block_size--;
+        if (sub_block_size == 0) {
+          sub_block_size = *block_data;
+          std::cout << "xxxx" << (int)block_data << "x" << (int)sub_block_size << " ";
+          if (sub_block_size == 0) {
+            // TODO: Throw warning that the next data sub block is of size 0 but EOI hasnt been reached yet
+            //return ++block_data;
+          }
+          block_data++;
+        }
+
+        const auto remaining_bits = curr_bit - BYTE_SIZE;
+        curr_bit = 0;
+
+        lshift = BYTE_SIZE - remaining_bits - curr_bit;
+        rshift = BYTE_SIZE - remaining_bits;
+        if (lshift < 0) {
+          lshift = 0;
+          rshift = curr_bit;
+        }
+
+        // Having to chain-cast to uint8_t here because otherwise the bits wont be shifted "off the edge"
+        curr_code += static_cast<uint8_t>(static_cast<uint8_t>(*block_data << lshift) >> rshift) << (curr_code_size - remaining_bits);
+
+        curr_bit += remaining_bits;
+      }
 
 			if (curr_code == EOI) {
 				PaintImg(last_pixel, true);
 				break;
 			}
+
+      if (curr_bit == BYTE_SIZE) {
+        block_data++;
+        sub_block_size--;
+        if (sub_block_size == 0) {
+          sub_block_size = *block_data;
+          std::cout << "xxx" << (int)block_data << "x" << (int)sub_block_size << " ";
+          if (sub_block_size == 0) {
+            std::cout << std::endl << "code size: " << curr_code_size;
+            // TODO: Throw warning that the next data sub block is of size 0 but EOI hasnt been reached yet
+            //return ++block_data;
+          }
+          block_data++;
+        }
+
+        curr_bit = 0;
+      }
+
 			// Reset dictionary to it's base state and set code_size back to the initial value
 			if (curr_code == CLEAR) {
 				last_pixel = PaintImg(last_pixel);
 				std::fill(dictionary_.begin() + base_dic_size_, dictionary_.end(), 0);
 				curr_code_size = MIN_CODE_SIZE + 1;
 			}
-
+      /*std::cout << "Check if Dictionary entry has been initialized" << std::endl;
+      std::cout << "Size:" << dictionary_.size() << std::endl;
+      std::cout << "Code:" << curr_code << std::endl;*/
 			// Check if Dictionary entry has been initialized
 			if ((dictionary_[curr_code] & INITIALIZATION_FLAG) == INITIALIZATION_FLAG) {
 				buffered_code = dictionary_[curr_code];
 			}
 		}
+    std::cout << curr_code << " ";
+    if (test % 10 == 0) {
+      std::cout << std::endl << test << ": ";
+    }
+    test++;
 		// LZW Decoding Round
 		code_stream_.push_back(curr_code);
 		const auto last_code_first_symbol = (dictionary_[last_code] & (0b1111111 << LEADING_CODE_SHIFT));
@@ -534,6 +598,76 @@ const std::vector<uint8_t>* DecodeGif::GetImage() const {
 
 uint16_t DecodeGif::ParseBytes(uint8_t least_sig, uint8_t most_sig) const {
 	return (most_sig << BYTE_SIZE) + least_sig;
+}
+
+uint8_t* DecodeGif::ParseOneRound(int curr_code_size, int& curr_bit, int& curr_code, uint8_t& sub_block_size, uint8_t* block_data) {
+  const auto BYTE_SIZE = 8;
+
+  // Determine how many bits left and right need to be kicked out via shift to only analyze the current code
+  auto lshift = BYTE_SIZE - curr_code_size - curr_bit;
+  auto rshift = BYTE_SIZE - curr_code_size;
+  if (lshift < 0) {
+    lshift = 0;
+    rshift = curr_bit;
+  }
+  curr_code = static_cast<uint8_t>(static_cast<uint8_t>(*block_data << lshift) >> rshift);
+  curr_bit += curr_code_size;
+
+  // Code handling routine for if the current code doesnt reach the end of the current byte
+  if (curr_bit <= BYTE_SIZE) {
+    // Special subroutine to wrap up handling bit-parsing for when the current code ends exactly at the end of the current byte
+    if (curr_bit == BYTE_SIZE) {
+      block_data++;
+      sub_block_size--;
+      curr_bit = 0;
+    }
+  }
+  // Code handling routine for if the current code reaches beyond the end of the current byte
+  else {
+    block_data++;
+    sub_block_size--;
+
+    const auto remaining_bits = curr_bit - BYTE_SIZE;
+    curr_bit = 0;
+
+    lshift = BYTE_SIZE - remaining_bits - curr_bit;
+    rshift = BYTE_SIZE - remaining_bits;
+    if (lshift < 0) {
+      lshift = 0;
+      rshift = curr_bit;
+    }
+
+    // Having to chain-cast to uint8_t here because otherwise the bits wont be shifted "off the edge"
+    curr_code += static_cast<uint8_t>(static_cast<uint8_t>(*block_data << lshift) >> rshift) << (curr_code_size - remaining_bits);
+
+    curr_bit += remaining_bits;
+  }
+  if (curr_bit == BYTE_SIZE) {
+    block_data++;
+    sub_block_size--;
+    curr_bit = 0;
+  }
+  if (curr_bit > BYTE_SIZE) {
+    block_data++;
+    sub_block_size--;
+
+    const auto remaining_bits = curr_bit - BYTE_SIZE;
+    curr_bit = 0;
+
+    lshift = BYTE_SIZE - remaining_bits - curr_bit;
+    rshift = BYTE_SIZE - remaining_bits;
+    if (lshift < 0) {
+      lshift = 0;
+      rshift = curr_bit;
+    }
+
+    // Having to chain-cast to uint8_t here because otherwise the bits wont be shifted "off the edge"
+    curr_code += static_cast<uint8_t>(static_cast<uint8_t>(*block_data << lshift) >> rshift) << (curr_code_size - remaining_bits);
+
+    curr_bit += remaining_bits;
+  }
+
+  return block_data;
 }
 
 } // namespace utils

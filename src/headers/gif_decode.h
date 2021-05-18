@@ -97,7 +97,8 @@ private:
 	uint8_t* HandleGraphicControl(uint8_t* extension_data);
 	uint8_t* HandleImageDescriptor(uint8_t* block_data);
 	uint8_t* HandleImageData(uint8_t* block_data);
-	int PaintImg(int last_painted_pixel, bool EOI = false);
+	int PaintImg(int next_pixel_to_paint, bool EOI = false);
+  int DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel);
 
 	GifHeaderInfos infos_;
 	Packed packed_;
@@ -114,7 +115,7 @@ private:
 	int gct_size_ = 0;
 	std::vector<uint8_t> even_image_;
 	std::vector<uint8_t> odd_image_;
-	std::vector<uint8_t> temp_image;
+	std::vector<uint8_t> buffer_image_;
 	std::vector<uint8_t> global_color_table_;
 	uint8_t* file_ = nullptr;
 	std::string plain_text_;
@@ -130,8 +131,14 @@ private:
 	const int LEADING_CODE_SHIFT = 12;
 	// Shift to the bit-region where the current code's appended base code is stored
 	const int APPENDED_CODE_SHIFT = 24;
+  //
+  const int LEADING_CODE_MASK = (0b11111111 << LEADING_CODE_SHIFT);
 	// Bit mask to access the bit-region where the appended code is stored
 	const int APPENDED_CODE_MASK = (0b11111111 << APPENDED_CODE_SHIFT);
+  // Bit mask to access the next code layer of the current code in the dictionary
+  const int NEXT_CODE_MASK = 0b111111111111;
+  // Gif standard defines 12 bits as the maximum for LZW codes
+  const int MAX_CODE_SIZE = 12;
 	// Note: auto isnt allowed here
 	std::vector<uint32_t> dictionary_ = std::vector<uint32_t>(MAX_DICTIONARY_CAPACITY, 0);
 	std::vector<uint16_t> code_stream_;

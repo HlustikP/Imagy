@@ -96,6 +96,7 @@ void DecodeGif::InitImageVectors() {
 	const auto memory_size = infos_.width * infos_.height * 3;
 	even_image_.reserve(memory_size);
 	odd_image_.reserve(memory_size);
+  buffer_image_.reserve(memory_size);
 
 	code_stream_.reserve(1000);
 }
@@ -292,7 +293,7 @@ uint8_t* DecodeGif::HandleImageDescriptor(uint8_t* block_data) {
 uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 	// TODO: Document this mess
 
-	auto last_pixel = 0;
+	auto next_pixel = 0;
 
 	// 0-Re-Initialize dictionary
 	std::fill(dictionary_.begin(), dictionary_.end(), 0);
@@ -337,11 +338,13 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
   auto test = 0;
 	//curr_bit = curr_code_size * 2;
 	curr_code = 0;
-  std::cout << (int)block_data << std::endl;
+
 	while (true) {
 		// Increase code size by one bit if current size reaches maximum capacity
 		if (dic_size == static_cast<int>(pow(2, curr_code_size))) {
-			curr_code_size++;
+      if (curr_code_size != MAX_CODE_SIZE) {
+        curr_code_size++;
+      }
 		}
 
 		// Determine how many bits left and right need to be kicked out via shift to only analyze the current code
@@ -353,22 +356,24 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 		}
 		curr_code = static_cast<uint8_t>(static_cast<uint8_t>(*block_data << lshift) >> rshift);
 		curr_bit += curr_code_size;
-    /*std::cout << "Base shifts set up" << std::endl;
-    std::cout << "Current Code:" << curr_code << std::endl;
-    std::cout << "Current Code Size:" << curr_code_size << std::endl;
-    std::cout << "Last Code:" << last_code << std::endl;
-    std::cout << "Clear Code:" << CLEAR << std::endl;*/
 		// Code handling routine for if the current code doesnt reach the end of the current byte
 		if (curr_bit <= BYTE_SIZE) {
 			if (curr_code == EOI) {
-				PaintImg(last_pixel, true);
+				PaintImg(next_pixel, true);
 				break;
 			}
 			// Reset dictionary to it's base state and set code_size back to the initial value
 			if (curr_code == CLEAR) {
-				last_pixel = PaintImg(last_pixel);
+        next_pixel = PaintImg(next_pixel);
 				std::fill(dictionary_.begin() + base_dic_size_, dictionary_.end(), 0);
 				curr_code_size = MIN_CODE_SIZE + 1;
+        dic_size = (1 << MIN_CODE_SIZE) + 2;
+        block_data = ParseOneRound(curr_code_size, curr_bit, last_code, sub_block_size, block_data);
+        code_stream_.clear();
+        code_stream_.push_back(last_code);
+        buffered_code = dictionary_.at(last_code);
+
+        continue;
 			}
 
       // Special subroutine to wrap up handling bit-parsing for when the current code ends exactly at the end of the current byte
@@ -377,10 +382,9 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
         sub_block_size--;
         if (sub_block_size == 0) {
           sub_block_size = *block_data;
-          std::cout << "x" << (int)block_data << "x" << sub_block_size << " ";
           if (sub_block_size == 0) {
             // TODO: Throw warning that the next data sub block is of size 0 but EOI hasnt been reached yet
-            //return ++block_data;
+            return ++block_data;
           }
           block_data++;
         }
@@ -398,10 +402,9 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 			sub_block_size--;
 			if (sub_block_size == 0) {
 				sub_block_size = *block_data;
-        std::cout << "xx" << (int)block_data << "x" << (int)sub_block_size << " ";
 				if (sub_block_size == 0) {
 					// TODO: Throw warning that the next data sub block is of size 0 but EOI hasnt been reached yet
-					//return ++block_data;
+					return ++block_data;
 				}
 				block_data++;
 			}
@@ -426,10 +429,9 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
         sub_block_size--;
         if (sub_block_size == 0) {
           sub_block_size = *block_data;
-          std::cout << "xxxx" << (int)block_data << "x" << (int)sub_block_size << " ";
           if (sub_block_size == 0) {
             // TODO: Throw warning that the next data sub block is of size 0 but EOI hasnt been reached yet
-            //return ++block_data;
+            return ++block_data;
           }
           block_data++;
         }
@@ -451,7 +453,7 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
       }
 
 			if (curr_code == EOI) {
-				PaintImg(last_pixel, true);
+				PaintImg(next_pixel, true);
 				break;
 			}
 
@@ -460,11 +462,9 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
         sub_block_size--;
         if (sub_block_size == 0) {
           sub_block_size = *block_data;
-          std::cout << "xxx" << (int)block_data << "x" << (int)sub_block_size << " ";
           if (sub_block_size == 0) {
-            std::cout << std::endl << "code size: " << curr_code_size;
             // TODO: Throw warning that the next data sub block is of size 0 but EOI hasnt been reached yet
-            //return ++block_data;
+            return ++block_data;
           }
           block_data++;
         }
@@ -474,28 +474,28 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 
 			// Reset dictionary to it's base state and set code_size back to the initial value
 			if (curr_code == CLEAR) {
-				last_pixel = PaintImg(last_pixel);
+				next_pixel = PaintImg(next_pixel);
 				std::fill(dictionary_.begin() + base_dic_size_, dictionary_.end(), 0);
 				curr_code_size = MIN_CODE_SIZE + 1;
+        dic_size = (1 << MIN_CODE_SIZE) + 2;
+        block_data = ParseOneRound(curr_code_size, curr_bit, last_code, sub_block_size, block_data);
+        code_stream_.clear();
+        code_stream_.push_back(last_code);
+        buffered_code = dictionary_.at(last_code);
+        std::cout << std::endl << "CLEAR" << std::endl;
+
+        continue;
 			}
-      /*std::cout << "Check if Dictionary entry has been initialized" << std::endl;
-      std::cout << "Size:" << dictionary_.size() << std::endl;
-      std::cout << "Code:" << curr_code << std::endl;*/
 			// Check if Dictionary entry has been initialized
 			if ((dictionary_[curr_code] & INITIALIZATION_FLAG) == INITIALIZATION_FLAG) {
 				buffered_code = dictionary_[curr_code];
 			}
 		}
-    std::cout << curr_code << " ";
-    if (test % 10 == 0) {
-      std::cout << std::endl << test << ": ";
-    }
-    test++;
 		// LZW Decoding Round
 		code_stream_.push_back(curr_code);
-		const auto last_code_first_symbol = (dictionary_[last_code] & (0b1111111 << LEADING_CODE_SHIFT));
+		const auto last_code_first_symbol = (dictionary_[last_code] & LEADING_CODE_MASK);
 		dictionary_[dic_size] = last_code | last_code_first_symbol | INITIALIZATION_FLAG |
-			((buffered_code & (0b11111111 << LEADING_CODE_SHIFT)) << LEADING_CODE_SHIFT);
+			((buffered_code & LEADING_CODE_MASK) << LEADING_CODE_SHIFT);
 		dic_size++;
 		last_code = curr_code;
 	}
@@ -505,16 +505,17 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 	return block_data + 2;
 }
 
-int DecodeGif::PaintImg(int last_painted_pixel, bool EOI) {
+int DecodeGif::PaintImg(int next_pixel_to_paint, bool EOI) {
 	// As we paint the Image in reverse, jump to last pixel's index of the current segment
 	auto curr_pixel = (image_descriptor_.height * image_descriptor_.witdh - 1) * 3;
+  const auto tail_pixel = curr_pixel;
 
 	// Choose our image vector from 2 alternating ones
   auto* const curr_image = (current_image_ % 2) == 0 ? &even_image_ : &odd_image_;
   auto* const last_image = (current_image_ % 2) == 0 ? &odd_image_ : &even_image_;
 
   // Initialize image base during first painting iteration
-  if (last_painted_pixel == 0) {
+  if (next_pixel_to_paint == 0) {
 	  switch (graphic_control_.disposal_method) {
 		  // Method 0: Do nothing
 	  case 0:
@@ -550,34 +551,18 @@ int DecodeGif::PaintImg(int last_painted_pixel, bool EOI) {
     
 	// Note to future self: if the to-be-drawn rectangle isnt as wide as the img, we have to skip all pixels that hang over left/right off the sides!
 
-  // Simplified routine for images encoded entirely within one round
-	if (last_painted_pixel == 0 && EOI) {
-		for (signed int code = code_stream_.size() - 1; code >= 0; code--) {
-			auto curr_code = code_stream_[code];
-			// If we directly read a base code, write corresponding rgb-values into the image and move on to the next code
-			if (curr_code < base_dic_size_) {
-				(*curr_image)[curr_pixel] = global_color_table_[curr_code * 3];
-				(*curr_image)[curr_pixel + 1] = global_color_table_[(curr_code * 3) + 1];
-				(*curr_image)[curr_pixel + 2] = global_color_table_[(curr_code * 3) + 2];
-				curr_pixel -= 3;
-				continue;
-			}
-			// Get the rgb-values from the appended code and dive deeper until we hit a base code
-			while (true) {
-				const auto dic_entry = dictionary_[curr_code];
-				(*curr_image)[curr_pixel] = global_color_table_[((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3];
-				(*curr_image)[curr_pixel + 1] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 1];
-				(*curr_image)[curr_pixel + 2] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 2];
-				curr_pixel -= 3;
-				if (curr_code < base_dic_size_) {
-					break;
-				}
-				curr_code = dic_entry & 0b111111111111;
-			}
-		}
+	if (next_pixel_to_paint == 0 && EOI) {
+    // Images encoded entirely within one round can be directly written into the actual image vector...
+    DecodeLZWToRGB(curr_image, curr_pixel);
+	} else {
+    // ... otherwise we first write the data into a buffer image and then copy them over
+    auto const head_pixel = DecodeLZWToRGB(&buffer_image_, curr_pixel);
+    auto const buffer_size = tail_pixel - head_pixel;
+    std::copy(&buffer_image_[head_pixel], &buffer_image_[head_pixel] + buffer_size, &(*curr_image)[next_pixel_to_paint]);
+    next_pixel_to_paint += buffer_size;
 	}
 
-	return curr_pixel;
+	return next_pixel_to_paint;
 }
 
 GifHeaderInfos DecodeGif::GetInfos() const {
@@ -668,6 +653,38 @@ uint8_t* DecodeGif::ParseOneRound(int curr_code_size, int& curr_bit, int& curr_c
   }
 
   return block_data;
+}
+
+// Returns size of written image data in bytes
+int DecodeGif::DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel)
+{
+  for (signed int code = code_stream_.size() - 1; code >= 0; code--) {
+    auto curr_code = code_stream_[code];
+    // If we directly read a base code, write corresponding rgb-values into the image and move on to the next code
+    if (curr_code < base_dic_size_) {
+      (*image)[curr_pixel] = global_color_table_[curr_code * 3];
+      (*image)[curr_pixel + 1] = global_color_table_[(curr_code * 3) + 1];
+      (*image)[curr_pixel + 2] = global_color_table_[(curr_code * 3) + 2];
+      curr_pixel -= 3;
+      continue;
+    }
+    // Get the rgb-values from the appended code and dive deeper until we hit a base code
+    while (true) {
+      const auto dic_entry = dictionary_[curr_code];
+      (*image)[curr_pixel] = global_color_table_[((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3];
+      (*image)[curr_pixel + 1] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 1];
+      (*image)[curr_pixel + 2] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 2];
+      curr_pixel -= 3;
+      if (curr_code < base_dic_size_) {
+        // We hit a base code and therefore exit the inner loop
+        break;
+      }
+      curr_code = dic_entry & NEXT_CODE_MASK;
+    }
+  }
+
+  // Increment by three to get back to the last pixel written
+  return curr_pixel + 3;
 }
 
 } // namespace utils

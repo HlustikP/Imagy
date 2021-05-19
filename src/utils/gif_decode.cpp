@@ -482,7 +482,6 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
         code_stream_.clear();
         code_stream_.push_back(last_code);
         buffered_code = dictionary_.at(last_code);
-        std::cout << std::endl << "CLEAR" << std::endl;
 
         continue;
 			}
@@ -517,13 +516,16 @@ int DecodeGif::PaintImg(int next_pixel_to_paint, bool EOI) {
   // Initialize image base during first painting iteration
   if (next_pixel_to_paint == 0) {
 	  switch (graphic_control_.disposal_method) {
+
 		  // Method 0: Do nothing
 	  case 0:
 		  break;
+
 		  // Method 1: Use the last image as a background to be overwritten
 	  case 1:
 		  *curr_image = *last_image;
 		  break;
+
 		  // Method 2: Reset Image to the background color
 	  case 2: {
 		  // Pixels are here broken down into their color components, therefore the "* 3"
@@ -554,15 +556,15 @@ int DecodeGif::PaintImg(int next_pixel_to_paint, bool EOI) {
 	if (next_pixel_to_paint == 0 && EOI) {
     // Images encoded entirely within one round can be directly written into the actual image vector...
     DecodeLZWToRGB(curr_image, curr_pixel);
-	} else {
+	}
+  else {
     // ... otherwise we first write the data into a buffer image and then copy them over
     auto const head_pixel = DecodeLZWToRGB(&buffer_image_, curr_pixel);
     auto const buffer_size = tail_pixel - head_pixel;
-    std::copy(&buffer_image_[head_pixel], &buffer_image_[head_pixel] + buffer_size, &(*curr_image)[next_pixel_to_paint]);
+    std::copy(&buffer_image_[head_pixel], &buffer_image_[head_pixel] + buffer_size + 3, &(*curr_image)[next_pixel_to_paint]);
     next_pixel_to_paint += buffer_size;
 	}
-
-	return next_pixel_to_paint;
+	return next_pixel_to_paint + 3;
 }
 
 GifHeaderInfos DecodeGif::GetInfos() const {

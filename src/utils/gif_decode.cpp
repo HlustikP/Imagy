@@ -708,28 +708,68 @@ uint8_t* DecodeGif::ParseOneRound(int curr_code_size, int& curr_bit, int& curr_c
 // Returns relative byte position of the head pixel
 int DecodeGif::DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel)
 {
-  for (signed int code = code_stream_.size() - 1; code >= 0; code--) {
-    auto curr_code = code_stream_[code];
-    // If we directly read a base code, write corresponding rgb-values into the image and move on to the next code
-    if (curr_code < base_dic_size_) {
-      (*image)[curr_pixel] = global_color_table_[curr_code * 3];
-      (*image)[curr_pixel + 1] = global_color_table_[(curr_code * 3) + 1];
-      (*image)[curr_pixel + 2] = global_color_table_[(curr_code * 3) + 2];
-      curr_pixel -= 3;
-      continue;
-    }
-    // Get the rgb-values from the appended code and dive deeper until we hit a base code
-    while (true) {
-      const auto dic_entry = dictionary_[curr_code];
-      (*image)[curr_pixel] = global_color_table_[((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3];
-      (*image)[curr_pixel + 1] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 1];
-      (*image)[curr_pixel + 2] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 2];
-      curr_pixel -= 3;
+  auto color = 0;
+
+  if (!graphic_control_.transparency) {
+    for (signed int code = code_stream_.size() - 1; code >= 0; code--) {
+      auto curr_code = code_stream_[code];
+      // If we directly read a base code, write corresponding rgb-values into the image and move on to the next code
       if (curr_code < base_dic_size_) {
-        // We hit a base code and therefore exit the inner loop
-        break;
+        (*image)[curr_pixel] = global_color_table_[curr_code * 3];
+        (*image)[curr_pixel + 1] = global_color_table_[(curr_code * 3) + 1];
+        (*image)[curr_pixel + 2] = global_color_table_[(curr_code * 3) + 2];
+        curr_pixel -= 3;
+        continue;
       }
-      curr_code = dic_entry & NEXT_CODE_MASK;
+      // Get the rgb-values from the appended code and dive deeper until we hit a base code
+      while (true) {
+        const auto dic_entry = dictionary_[curr_code];
+        color = (dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT;
+        (*image)[curr_pixel] = global_color_table_[color * 3];
+        (*image)[curr_pixel + 1] = global_color_table_[color * 3 + 1];
+        (*image)[curr_pixel + 2] = global_color_table_[color * 3 + 2];
+        curr_pixel -= 3;
+        if (curr_code < base_dic_size_) {
+          // We hit a base code and therefore exit the inner loop
+          break;
+        }
+        curr_code = dic_entry & NEXT_CODE_MASK;
+      }
+    }
+  }
+  else {
+    auto transparent_pixel = graphic_control_.transperent_color_index;
+    std::cout << "uwu ";
+    for (signed int code = code_stream_.size() - 1; code >= 0; code--) {
+      auto curr_code = code_stream_[code];
+      // If we directly read a base code, write corresponding rgb-values into the image and move on to the next code
+      if (curr_code < base_dic_size_) {
+        if (curr_code == transparent_pixel) {
+          curr_pixel -= 3;
+          continue;
+        }
+        (*image)[curr_pixel] = global_color_table_[curr_code * 3];
+        (*image)[curr_pixel + 1] = global_color_table_[(curr_code * 3) + 1];
+        (*image)[curr_pixel + 2] = global_color_table_[(curr_code * 3) + 2];
+        curr_pixel -= 3;
+        continue;
+      }
+      // Get the rgb-values from the appended code and dive deeper until we hit a base code
+      while (true) {
+        const auto dic_entry = dictionary_[curr_code];
+        color = (dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT;
+        if (transparent_pixel != color) {
+          (*image)[curr_pixel] = global_color_table_[color * 3];
+          (*image)[curr_pixel + 1] = global_color_table_[color * 3 + 1];
+          (*image)[curr_pixel + 2] = global_color_table_[color * 3 + 2];
+        }
+        curr_pixel -= 3;
+        if (curr_code < base_dic_size_) {
+          // We hit a base code and therefore exit the inner loop
+          break;
+        }
+        curr_code = dic_entry & NEXT_CODE_MASK;
+      }
     }
   }
 
@@ -743,14 +783,19 @@ int DecodeGif::DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel, int w
   const auto horizontal_pad = (width - image_descriptor_.witdh) * 3;
   const auto rightmost_pos = image_descriptor_.witdh - 1;
   auto inner_image_pos = rightmost_pos;
+  auto transparent_pixel = graphic_control_.transperent_color_index;
+  auto transparency = graphic_control_.transparency;
+  auto color = 0;
 
   for (signed int code = code_stream_.size() - 1; code >= 0; code--) {
     auto curr_code = code_stream_[code];
     // If we directly read a base code, write corresponding rgb-values into the image and move on to the next code
     if (curr_code < base_dic_size_) {
-      (*image)[curr_pixel] = global_color_table_[curr_code * 3];
-      (*image)[curr_pixel + 1] = global_color_table_[(curr_code * 3) + 1];
-      (*image)[curr_pixel + 2] = global_color_table_[(curr_code * 3) + 2];
+      if (curr_code != transparent_pixel && !transparency) {
+        (*image)[curr_pixel] = global_color_table_[curr_code * 3];
+        (*image)[curr_pixel + 1] = global_color_table_[(curr_code * 3) + 1];
+        (*image)[curr_pixel + 2] = global_color_table_[(curr_code * 3) + 2];
+      }
       curr_pixel -= 3;
       if (inner_image_pos == 0) {
         curr_pixel -= horizontal_pad;
@@ -764,9 +809,12 @@ int DecodeGif::DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel, int w
     // Get the rgb-values from the appended code and dive deeper until we hit a base code
     while (true) {
       const auto dic_entry = dictionary_[curr_code];
-      (*image)[curr_pixel] = global_color_table_[((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3];
-      (*image)[curr_pixel + 1] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 1];
-      (*image)[curr_pixel + 2] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 2];
+      color = (dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT;
+      if (color != transparent_pixel && !transparency) {
+        (*image)[curr_pixel] = global_color_table_[color * 3];
+        (*image)[curr_pixel + 1] = global_color_table_[color * 3 + 1];
+        (*image)[curr_pixel + 2] = global_color_table_[color * 3 + 2];
+      }
       curr_pixel -= 3;
       if (inner_image_pos == 0) {
         curr_pixel -= horizontal_pad;

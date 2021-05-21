@@ -791,7 +791,7 @@ int DecodeGif::DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel, int w
     auto curr_code = code_stream_[code];
     // If we directly read a base code, write corresponding rgb-values into the image and move on to the next code
     if (curr_code < base_dic_size_) {
-      if (curr_code != transparent_pixel && !transparency) {
+      if (curr_code != transparent_pixel || !transparency) {
         (*image)[curr_pixel] = global_color_table_[curr_code * 3];
         (*image)[curr_pixel + 1] = global_color_table_[(curr_code * 3) + 1];
         (*image)[curr_pixel + 2] = global_color_table_[(curr_code * 3) + 2];
@@ -810,7 +810,7 @@ int DecodeGif::DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel, int w
     while (true) {
       const auto dic_entry = dictionary_[curr_code];
       color = (dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT;
-      if (color != transparent_pixel && !transparency) {
+      if (color != transparent_pixel || !transparency) {
         (*image)[curr_pixel] = global_color_table_[color * 3];
         (*image)[curr_pixel + 1] = global_color_table_[color * 3 + 1];
         (*image)[curr_pixel + 2] = global_color_table_[color * 3 + 2];

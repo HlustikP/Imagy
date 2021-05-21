@@ -104,7 +104,6 @@ void DecodeGif::InitImageVectors() {
 int DecodeGif::IterateThroughFile() {
 	// skip to the first block after the header-gct-section 
 	auto* current_block = file_ + HEADER_SIZE + gct_size_;
-
 	// TODO: max iteration count?
 	while (true) {
 		switch (*current_block) {
@@ -123,7 +122,9 @@ int DecodeGif::IterateThroughFile() {
 				return 0;
 			// If we manage to reach this, we have encountered an unknown block introducer
 			default:
-				return 1;
+        std::cout << "Nope";
+        current_block++;
+				//return 1;
 		}
 	}
 }
@@ -210,10 +211,35 @@ uint8_t* DecodeGif::HandlePlainText(uint8_t* extension_data) {
 
 // Returns Pointer to the position right after the Application block, returns nullptr on failure
 uint8_t* DecodeGif::HandleApplication(uint8_t* extension_data) {
-	// The NETSCAPE2.0 application extension is the only known one, so lets assume it is
+  extension_data++;
+
+  // Next byte is the next block's size, the specification defines that here this always holds the value 0x0b
+  const auto block_size = *extension_data;
+
+  // Load App Identifer and Auth Code
+  std::vector<char> ApplicationIdAndAuth;
+  ApplicationIdAndAuth.reserve(11);
+  for (auto i = 0; i < block_size; i++) {
+    ApplicationIdAndAuth.push_back(*(++extension_data));
+  }
+  
+  if (ApplicationIdAndAuth == XmpAppIdAndAuth) {
+    return HandleXmpApplication(++extension_data);
+  }
+  else if (ApplicationIdAndAuth == NetscapeAppIdAndAuth) {
+    return HandleNetscapeApplication(++extension_data);
+  }
+
+  // TODO: UnknownApplicationExtensionHandler():
+  return nullptr;
+
+}
+
+// Returns Pointer to the position right after the Application block, returns nullptr on failure
+uint8_t* DecodeGif::HandleNetscapeApplication(uint8_t* extension_data) {
 
 	// The only interesting byte is the one that holds information about the loop count, with 0 beeing an infinite loop
-	const auto LOOP_COUNT_OFFSET = 15;
+	const auto LOOP_COUNT_OFFSET = 2;
 	extension_data += LOOP_COUNT_OFFSET;
 	looping_ = true;
 	loop_count_ = *extension_data;
@@ -224,6 +250,18 @@ uint8_t* DecodeGif::HandleApplication(uint8_t* extension_data) {
 		return nullptr;
 	}
 	return ++extension_data;
+}
+
+// Returns Pointer to the position right after the Application block, returns nullptr on failure
+uint8_t* DecodeGif::HandleXmpApplication(uint8_t* extension_data) {
+
+  // XMP data is utf-8 encoded and does not use a zero byte, the block itself is however terminated by a double 0x00 block
+  while (*extension_data != END_OF_BLOCK) {
+    xmp_data.push_back(*extension_data);
+    extension_data++;
+  }
+
+  return extension_data+=2;
 }
 
 // Returns Pointer to the position right after the Graphic Control block, returns nullptr on failure
@@ -360,6 +398,7 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 		if (curr_bit <= BYTE_SIZE) {
 			if (curr_code == EOI) {
 				PaintImg(next_pixel, true);
+        code_stream_.clear();
 				break;
 			}
 			// Reset dictionary to it's base state and set code_size back to the initial value
@@ -454,6 +493,7 @@ uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
 
 			if (curr_code == EOI) {
 				PaintImg(next_pixel, true);
+        code_stream_.clear();
 				break;
 			}
 
@@ -523,7 +563,8 @@ int DecodeGif::PaintImg(int next_pixel_to_paint, bool EOI) {
 
 		  // Method 1: Use the last image as a background to be overwritten
 	  case 1:
-		  *curr_image = *last_image;
+		  //*curr_image = *last_image; <- size is 0, so this doesnt work
+      std::copy(&(*last_image)[0], &(*last_image)[0] + last_image->capacity(), &(*curr_image)[0]);
 		  break;
 
 		  // Method 2: Reset Image to the background color
@@ -548,18 +589,25 @@ int DecodeGif::PaintImg(int next_pixel_to_paint, bool EOI) {
   }
 
 	// Calculate starting position, see https://i.imgur.com/7mc5yar.png for an attempt at an explanation
-	auto subpixel = (((image_descriptor_.top_pos * infos_.width) + image_descriptor_.left_pos) +
-					((image_descriptor_.height - 1) * infos_.width) + image_descriptor_.left_pos) * 3;
+	auto bottom_right_pixel = (((image_descriptor_.top_pos * infos_.width) + image_descriptor_.left_pos) +
+					((image_descriptor_.height - 1) * infos_.width) + image_descriptor_.witdh - 1) * 3;
     
 	// Note to future self: if the to-be-drawn rectangle isnt as wide as the img, we have to skip all pixels that hang over left/right off the sides!
-
 	if (next_pixel_to_paint == 0 && EOI) {
     // Images encoded entirely within one round can be directly written into the actual image vector...
-    DecodeLZWToRGB(curr_image, curr_pixel);
+    (infos_.height == image_descriptor_.height && infos_.width == image_descriptor_.witdh) ?
+      // Use simplified routine if the entire image is redrawn
+      DecodeLZWToRGB(curr_image, curr_pixel) :
+      // Use more complex routine if just a section is redrawn
+      DecodeLZWToRGB(curr_image, bottom_right_pixel, infos_.width, image_descriptor_.left_pos, image_descriptor_.top_pos);
 	}
   else {
     // ... otherwise we first write the data into a buffer image and then copy them over
-    auto const head_pixel = DecodeLZWToRGB(&buffer_image_, curr_pixel);
+    auto const head_pixel = (infos_.height == image_descriptor_.height && infos_.width == image_descriptor_.witdh) ?
+      // Use simplified routine if the entire image is redrawn
+      DecodeLZWToRGB(&buffer_image_, curr_pixel) :
+      // Use more complex routine if just a section is redrawn
+      DecodeLZWToRGB(&buffer_image_, bottom_right_pixel, infos_.width, image_descriptor_.left_pos, image_descriptor_.top_pos);
     auto const buffer_size = tail_pixel - head_pixel;
     std::copy(&buffer_image_[head_pixel], &buffer_image_[head_pixel] + buffer_size + 3, &(*curr_image)[next_pixel_to_paint]);
     next_pixel_to_paint += buffer_size;
@@ -580,7 +628,7 @@ GraphicControl DecodeGif::GetGraphicControl() const {
 }
 
 const std::vector<uint8_t>* DecodeGif::GetImage() const {
-	return &even_image_;
+	return &odd_image_;
 }
 
 uint16_t DecodeGif::ParseBytes(uint8_t least_sig, uint8_t most_sig) const {
@@ -657,7 +705,7 @@ uint8_t* DecodeGif::ParseOneRound(int curr_code_size, int& curr_bit, int& curr_c
   return block_data;
 }
 
-// Returns size of written image data in bytes
+// Returns relative byte position of the head pixel
 int DecodeGif::DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel)
 {
   for (signed int code = code_stream_.size() - 1; code >= 0; code--) {
@@ -677,6 +725,56 @@ int DecodeGif::DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel)
       (*image)[curr_pixel + 1] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 1];
       (*image)[curr_pixel + 2] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 2];
       curr_pixel -= 3;
+      if (curr_code < base_dic_size_) {
+        // We hit a base code and therefore exit the inner loop
+        break;
+      }
+      curr_code = dic_entry & NEXT_CODE_MASK;
+    }
+  }
+
+  // Increment by three to get back to the last pixel written
+  return curr_pixel + 3;
+}
+
+// Returns relative byte position of the head pixel
+int DecodeGif::DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel, int width, int anchor_x, int anchor_y)
+{
+  const auto horizontal_pad = (width - image_descriptor_.witdh) * 3;
+  const auto rightmost_pos = image_descriptor_.witdh - 1;
+  auto inner_image_pos = rightmost_pos;
+
+  for (signed int code = code_stream_.size() - 1; code >= 0; code--) {
+    auto curr_code = code_stream_[code];
+    // If we directly read a base code, write corresponding rgb-values into the image and move on to the next code
+    if (curr_code < base_dic_size_) {
+      (*image)[curr_pixel] = global_color_table_[curr_code * 3];
+      (*image)[curr_pixel + 1] = global_color_table_[(curr_code * 3) + 1];
+      (*image)[curr_pixel + 2] = global_color_table_[(curr_code * 3) + 2];
+      curr_pixel -= 3;
+      if (inner_image_pos == 0) {
+        curr_pixel -= horizontal_pad;
+        inner_image_pos = rightmost_pos;
+      }
+      else {
+        inner_image_pos--;
+      }
+      continue;
+    }
+    // Get the rgb-values from the appended code and dive deeper until we hit a base code
+    while (true) {
+      const auto dic_entry = dictionary_[curr_code];
+      (*image)[curr_pixel] = global_color_table_[((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3];
+      (*image)[curr_pixel + 1] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 1];
+      (*image)[curr_pixel + 2] = global_color_table_[(((dic_entry & APPENDED_CODE_MASK) >> APPENDED_CODE_SHIFT) * 3) + 2];
+      curr_pixel -= 3;
+      if (inner_image_pos == 0) {
+        curr_pixel -= horizontal_pad;
+        inner_image_pos = rightmost_pos;
+      }
+      else {
+        inner_image_pos--;
+      }
       if (curr_code < base_dic_size_) {
         // We hit a base code and therefore exit the inner loop
         break;

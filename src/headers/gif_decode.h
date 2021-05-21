@@ -54,7 +54,7 @@ struct GraphicControl {
 struct ImageDescriptor {
 	uint16_t left_pos;		// left position of where the image should begin drawing
 	uint16_t top_pos;		// top position of where the image should begin drawing
-	uint16_t witdh;
+	uint16_t witdh;// TODO: FIX THIS TYPO
 	uint16_t height;
 	uint8_t local_packed;
 };
@@ -65,6 +65,9 @@ struct LocalPacked {
 	bool sorted;
 	int local_table_size;	// calculated same way as global color table
 };
+
+const static std::vector<char> XmpAppIdAndAuth = { 0x58, 0x4d, 0x50, 0x20, 0x44, 0x61, 0x74, 0x61, 0x58, 0x4d, 0x50 };
+const static std::vector<char> NetscapeAppIdAndAuth = { 0x4e, 0x45, 0x54, 0x53, 0x43, 0x41, 0x50, 0x45, 0x32, 0x2e, 0x30 };
 
 class DecodeGif {
 public:
@@ -94,11 +97,16 @@ private:
 	uint8_t* HandleComment(uint8_t* extension_data);
 	uint8_t* HandlePlainText(uint8_t* extension_data);
 	uint8_t* HandleApplication(uint8_t* extension_data);
+  uint8_t* HandleNetscapeApplication(uint8_t* extension_data);
+  uint8_t* HandleXmpApplication(uint8_t* extension_data);
 	uint8_t* HandleGraphicControl(uint8_t* extension_data);
 	uint8_t* HandleImageDescriptor(uint8_t* block_data);
 	uint8_t* HandleImageData(uint8_t* block_data);
 	int PaintImg(int next_pixel_to_paint, bool EOI = false);
+  // Routine to decode images where the image parameters match the frame's
   int DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel);
+  // Routine to decode images where the image parameters do not match the frame's (image in image)
+  int DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel, int width, int anchor_x, int anchor_y);
 
 	GifHeaderInfos infos_;
 	Packed packed_;
@@ -117,6 +125,7 @@ private:
 	std::vector<uint8_t> odd_image_;
 	std::vector<uint8_t> buffer_image_;
 	std::vector<uint8_t> global_color_table_;
+  std::vector<char> xmp_data;
 	uint8_t* file_ = nullptr;
 	std::string plain_text_;
 	std::string comment_;

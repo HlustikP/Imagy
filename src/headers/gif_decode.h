@@ -29,8 +29,8 @@ struct GifHeaderInfos {
 	uint16_t width;				// Logical screen width
 	uint16_t height;			// Logical screen height
 	uint8_t packed;				/* Various flags included(most to least significance): 1 Bit global color table boolean, next three Bits ((bits per pixel) - 1),
-								   fifth Bit is a boolean for whether the table is sorted by order of importance,
-								   last three bits shows the global color table size per color as 2^(X+1), with X beeing the value of the three bits */
+								        fifth Bit is a boolean for whether the table is sorted by order of importance,
+								        last three bits shows the global color table size per color as 2^(X+1), with X beeing the value of the three bits */
 	uint8_t bg_index;			// Index of color in color table as default for pixels with undefined color
 	uint8_t aspect_ratio;		// If not zero, ratio will be calculated as ((N + 15) / 64) for all N<>0
 };
@@ -63,7 +63,7 @@ struct LocalPacked {
 	bool local_color_table;
 	bool interlace;
 	bool sorted;
-	int local_table_size;	// calculated same way as global color table
+	int table_size;	// calculated same way as global color table
 };
 
 const static std::vector<char> XmpAppIdAndAuth = { 0x58, 0x4d, 0x50, 0x20, 0x44, 0x61, 0x74, 0x61, 0x58, 0x4d, 0x50 };
@@ -91,6 +91,7 @@ private:
 	int ValidateHeader(const std::string& filename);
 	int FillHeaderInfos();
 	int InitGlobalColorTable();
+  uint8_t* InitLocalColorTable(uint8_t* block_data);
 	void InitImageVectors();
 	int IterateThroughFile();
 	uint8_t* HandleExtension(uint8_t* block_data);
@@ -121,10 +122,13 @@ private:
 	int loop_count_ = 0;
 	// gct = global color table
 	int gct_size_ = 0;
+  // lct = local color table
+  int lct_size_ = 0;
 	std::vector<uint8_t> even_image_;
 	std::vector<uint8_t> odd_image_;
 	std::vector<uint8_t> buffer_image_;
 	std::vector<uint8_t> global_color_table_;
+	std::vector<uint8_t> local_color_table_;
   std::vector<char> xmp_data;
 	uint8_t* file_ = nullptr;
 	std::string plain_text_;

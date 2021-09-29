@@ -2,11 +2,7 @@
 #include "decode.h"
 #include "encode.h"
 
-#include <windows.h>
-#include <iterator>
-#include <future>
 #include <chrono>
-#include <thread>
 
 namespace gil = boost::gil;
 

@@ -1,7 +1,8 @@
 #pragma once
 #include <vector>
-#include <regex>
 #include <filesystem>
+#include <thread>
+#include <future>
 
 // webp
 #include "decode.h"
@@ -9,26 +10,27 @@
 #include "mux.h"
 #include "demux.h"
 // boost::gil
-#include "gil.hpp"
-#include "gil/extension/io/png.hpp"
-#include "gil/extension/io/jpeg.hpp"
-#include "gil/extension/io/bmp.hpp"
+#include <boost/gil.hpp>
+#include <boost/gil/extension/io/png.hpp>
+#include <boost/gil/extension/io/jpeg.hpp>
+#include <boost/gil/extension/io/bmp.hpp>
 
 #include "file_io.h"
+#include "gif_decode.h"
 
 namespace gil = boost::gil;
 
 namespace image
 {
 
-const enum ColorModel {
+enum ColorModel {
 	RGB,
 	BGR,
 	RGBA,
 	BGRA,
 };
 
-const enum ImgFormat {
+enum ImgFormat {
 	BMP,
 	JPEG,
 	PNG,
@@ -37,6 +39,15 @@ const enum ImgFormat {
 
 	// always have this as last entry
 	INVALID = 99,
+};
+
+enum ImageStatus {
+  UNINITIALIZED,
+  IN_PROGRESS,
+  READY,
+  IN_USAGE,
+  FINISHED,
+  NULLIMG
 };
 
 // Tuple types: Signature in ASCII, Offset of signature begin, corresponding file type
@@ -67,17 +78,19 @@ private:
   int DecodeBmp(gil::rgb8_image_t image, std::string& filename);
   int DecodeBmp(gil::rgba8_image_t image, std::string& filename);
 
-  // For Encoding into Webp
-  int Encode(uint8_t** out_data, int& out_length);
+  int EncodeWebp(uint8_t** out_data, int& out_length);
+  int DecodeGif(std::string filename);
 
   std::string err_ = "";
 
   // rgb(a) data
   std::vector<uint8_t> data_;
 
+  std::unique_ptr<utils::DecodeGif> gif_;
+
   bool alpha_;
   bool animated_ = false;
-  int length_ = 0;
+  int size_ = 0;
   int height_ = 0;
   int width_ = 0;
 };

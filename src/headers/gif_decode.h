@@ -77,13 +77,14 @@ public:
 	// on demand decoding = new thread for every image?; generator and call next image with next() + option to just load all images at once
 
 	uint16_t ParseBytes(uint8_t least_sig, uint8_t most_sig) const;
-  uint8_t* ParseOneRound(int curr_code_size, int& curr_bit, int& curr_code, uint8_t& sub_block_size, uint8_t* block_data);
+  static uint8_t* ParseOneRound(int curr_code_size, int& curr_bit, int& curr_code, uint8_t& sub_block_size, uint8_t* block_data);
+  uint8_t* Next();
 	GifHeaderInfos GetInfos() const;
 	Packed GetPacked() const;
 	GraphicControl GetGraphicControl() const;
 
   // TODO: Dev only REMOVE LATER!
-	const std::vector<uint8_t>* GetImage() const;
+	std::vector<uint8_t>* GetImage();
 
 	static const int HEADER_SIZE = 13;
 
@@ -93,7 +94,7 @@ private:
 	int InitGlobalColorTable();
   uint8_t* InitLocalColorTable(uint8_t* block_data);
 	void InitImageVectors();
-	int IterateThroughFile();
+  uint8_t* IterateThroughFile();
 	uint8_t* HandleExtension(uint8_t* block_data);
 	uint8_t* HandleComment(uint8_t* extension_data);
 	uint8_t* HandlePlainText(uint8_t* extension_data);
@@ -104,6 +105,7 @@ private:
 	uint8_t* HandleImageDescriptor(uint8_t* block_data);
 	uint8_t* HandleImageData(uint8_t* block_data);
 	int PaintImg(int next_pixel_to_paint, bool EOI = false);
+  void CopySkipTransparents(uint8_t* begin, uint8_t* end, uint8_t* destination);
   // Routine to decode images where the image parameters match the frame's
   int DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel);
   // Routine to decode images where the image parameters do not match the frame's (image in image)
@@ -115,6 +117,8 @@ private:
 	ImageDescriptor image_descriptor_;
 	LocalPacked local_packed_;
 
+  uint8_t* curr_block_ = nullptr;
+  bool first_iteration_ = true;
 	int image_count_ = 0;
 	int current_image_ = 0;
 	int file_length_ = 0;
@@ -129,6 +133,7 @@ private:
 	std::vector<uint8_t> buffer_image_;
 	std::vector<uint8_t> global_color_table_;
 	std::vector<uint8_t> local_color_table_;
+  std::vector<uint8_t*> transparent_pixels_;
   std::vector<char> xmp_data;
 	uint8_t* file_ = nullptr;
 	std::string plain_text_;

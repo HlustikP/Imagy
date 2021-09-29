@@ -25,7 +25,7 @@ ImgFormat Image::GetFileExtension(std::string& filename) {
 	}
 
 	// spamming if-checks because switch is illegal with string types
-  // TODO: find alternative check method
+  // TODO: find alternative more elegant check method
 	if (path.extension() == ".bmp" || path.extension() == ".dib") {
 		return BMP;
 	}
@@ -42,6 +42,10 @@ ImgFormat Image::GetFileExtension(std::string& filename) {
 	if (path.extension() == ".webp") {
 		return WEBP;
 	}
+
+  if (path.extension() == ".gif") {
+    return GIF;
+  }
 
 	return INVALID;
 };
@@ -129,6 +133,16 @@ int Image::LoadImgData(std::string& filename, ImgFormat format) {
 
 			return result;
 		}
+    case GIF: {
+      // Also we will assume animation when the gif file type is used
+      animated_ = true;
+      gif_ = std::make_unique<utils::DecodeGif>(filename);
+
+      width_ = gif_->GetInfos().width;
+      height_ = gif_->GetInfos().height;
+      size_ = gif_->GetInfos().height * gif_->GetInfos().width * 4;
+      break;
+    }
 		default:
 			return 1;
 	}
@@ -159,18 +173,23 @@ int Image::WriteImgToFile(std::string& filename, ImgFormat format) {
 		break;
 	}
 	case WEBP: {
-		uint8_t* out_data = nullptr;
-		auto out_length = 0;
+    if (!animated_) {
+      uint8_t* out_data = nullptr;
+      auto out_length = 0;
 
-		// Encode() return 1 or more on error, so return if that happens
-		if (Encode(&out_data, out_length)) {
-			err_ = "Error while encoding image";
-			return 1;
-		}
+      // Encode() return 1 or more on error, so return if that happens
+      if (EncodeWebp(&out_data, out_length)) {
+        err_ = "Error while encoding image";
+        return 1;
+      }
 
-		utils::FileIO::WriteToFile(reinterpret_cast<char*>(out_data), filename, out_length);
+      utils::FileIO::WriteToFile(reinterpret_cast<char*>(out_data), filename, out_length);
 
-		WebPFree(out_data);
+      WebPFree(out_data);
+    }
+    else {
+      DecodeGif(filename);
+    }
 		break;
 	}
 	default:
@@ -194,8 +213,8 @@ int Image::DecodeWebP(uint8_t* data, int in_length) {
 		WebPDecodeRGB(data, in_length, &width_, &height_);
 
 	// interleaved rgb(a) stores an amount of bytes equal to the amount of channels times the amount of pixels
-	length_ = width_ * height_ * channel_count;
-	data_.assign(decoded, decoded + length_);
+	size_ = width_ * height_ * channel_count;
+	data_.assign(decoded, decoded + size_);
 
 	WebPFree(decoded);
 	return 0;
@@ -212,11 +231,11 @@ int Image::DecodePng(gil::rgb8_image_t image, std::string& filename) {
 	auto* decoded = &(pixels[0]);
 
 	// interleaved rgb(a) stores an amount of bytes equal to the amount of channels times the amount of pixels
-	length_ = width_ * height_ * channel_count;
+	size_ = width_ * height_ * channel_count;
 
-	data_.reserve(length_);
+	data_.reserve(size_);
 
-	std::copy(decoded, decoded + length_, data_.begin());
+	std::copy(decoded, decoded + size_, data_.begin());
 
 	return 0;
 }
@@ -232,11 +251,11 @@ int Image::DecodePng(gil::rgba8_image_t image, std::string& filename) {
 	auto* decoded = &(pixels[0]);
 
 	// interleaved rgb(a) stores an amount of bytes equal to the amount of channels times the amount of pixels
-	length_ = width_ * height_ * channel_count;
+	size_ = width_ * height_ * channel_count;
 
-	data_.reserve(length_);
+	data_.reserve(size_);
 
-	std::copy(decoded, decoded + length_, data_.begin());
+	std::copy(decoded, decoded + size_, data_.begin());
 
 	return 0;
 }
@@ -252,11 +271,11 @@ int Image::DecodeJpeg(gil::rgb8_image_t image, std::string& filename) {
 	auto* decoded = &(pixels[0]);
 
 	// interleaved rgb(a) stores an amount of bytes equal to the amount of channels times the amount of pixels
-	length_ = width_ * height_ * channel_count;
+	size_ = width_ * height_ * channel_count;
 
-	data_.reserve(length_);
+	data_.reserve(size_);
 
-	std::copy(decoded, decoded + length_, data_.begin());
+	std::copy(decoded, decoded + size_, data_.begin());
 
 	return 0;
 }
@@ -272,11 +291,11 @@ int Image::DecodeBmp(gil::rgb8_image_t image, std::string& filename) {
 	auto* decoded = &(pixels[0]);
 
 	// interleaved rgb(a) stores an amount of bytes equal to the amount of channels times the amount of pixels
-	length_ = width_ * height_ * channel_count;
+	size_ = width_ * height_ * channel_count;
 
-	data_.reserve(length_);
+	data_.reserve(size_);
 
-	std::copy(decoded, decoded + length_, data_.begin());
+	std::copy(decoded, decoded + size_, data_.begin());
 
 	return 0;
 }
@@ -292,11 +311,11 @@ int Image::DecodeBmp(gil::rgba8_image_t image, std::string& filename) {
 	auto* decoded = &(pixels[0]);
 
 	// interleaved rgb(a) stores an amount of bytes equal to the amount of channels times the amount of pixels
-	length_ = width_ * height_ * channel_count;
+	size_ = width_ * height_ * channel_count;
 
-	data_.reserve(length_);
+	data_.reserve(size_);
 
-	std::copy(decoded, decoded + length_, data_.begin());
+	std::copy(decoded, decoded + size_, data_.begin());
 
 	return 0;
 }
@@ -305,7 +324,7 @@ int Image::DecodeBmp(gil::rgba8_image_t image, std::string& filename) {
 	writes data into array pointed to by out_data
 	and the data length into the out_length out parameter
 	returns 0 on success and 1 on error*/
-int Image::Encode(uint8_t** out_data, int& out_length) {
+int Image::EncodeWebp(uint8_t** out_data, int& out_length) {
 	out_length = alpha_ ?
 		WebPEncodeRGBA(&data_[0], width_, height_, width_ * 4, 100, out_data) :
 		WebPEncodeRGB(&data_[0], width_, height_, width_ * 3, 100, out_data);
@@ -313,9 +332,164 @@ int Image::Encode(uint8_t** out_data, int& out_length) {
 	return out_length ? 0 : 1;
 }
 
+int Image::DecodeGif(std::string filename) {
+  WebPPicture pic_even;
+  WebPPictureInit(&pic_even);
+  WebPData webp_data;
+  WebPDataInit(&webp_data);
+  WebPAnimEncoderOptions enc_options;
+  WebPMemoryWriter writer;
+  WebPMemoryWriter writer2;
+  WebPConfig config;
+  config.quality = 90;
+  config.sns_strength = 90;
+  config.filter_sharpness = 6;
+  config.alpha_quality = 90;
+  WebPAnimEncoderOptionsInit(&enc_options);
+  auto* encoder = WebPAnimEncoderNew(width_, height_, &enc_options);
+
+  pic_even.use_argb = true;
+  pic_even.height = height_;
+  pic_even.width = width_;
+  pic_even.argb_stride = width_;
+
+  WebPMemoryWriterInit(&writer);
+  pic_even.writer = WebPMemoryWrite;
+  pic_even.custom_ptr = &writer;
+  WebPPictureAlloc(&pic_even);
+
+  WebPPicture pic_odd;
+  WebPPictureInit(&pic_odd);
+  pic_odd.use_argb = true;
+  pic_odd.height = height_;
+  pic_odd.width = width_;
+  pic_odd.argb_stride = width_;
+
+  WebPMemoryWriterInit(&writer2);
+  pic_odd.writer = WebPMemoryWrite;
+  pic_odd.custom_ptr = &writer2;
+  WebPPictureAlloc(&pic_even);
+
+  WebPConfigInit(&config);
+
+  int timestamp = 0;
+  bool once = true;
+
+  {
+    std::vector<std::future<uint8_t*>> images;
+    images.reserve(100);
+    std::vector<ImageStatus> gif_statuses;
+    gif_statuses.reserve(100);
+    std::vector<ImageStatus> webppics_statuses;
+    webppics_statuses.reserve(100);
+    std::vector<std::future<WebPPicture*>> webppics;
+    webppics.reserve(100);
+    std::vector<std::future<int>> adders;
+    adders.reserve(100);
+
+    std::vector<bool> added_pics;
+    added_pics.reserve(100);
+
+    auto racing_gif = 0;
+    auto racing_webp = 0;
+    auto added_frames = 0;
+    gif_statuses.push_back(ImageStatus::UNINITIALIZED);
+    webppics_statuses.push_back(ImageStatus::UNINITIALIZED);
+
+    bool gifs_finished = false;
+    bool adding_in_progress = false;
+
+    images.push_back(std::async(std::launch::async, [&gif_ = gif_, &gif_statuses, &gifs_finished, racing_gif]() {
+      gif_statuses[racing_gif] = ImageStatus::IN_PROGRESS;
+      auto result = gif_->Next();
+      gif_statuses[racing_gif] = ImageStatus::READY;
+      if (result == nullptr) {
+        gifs_finished = true;
+        gif_statuses[racing_gif] = ImageStatus::NULLIMG;
+      }
+      return result;
+      }));
+
+    while (true) {
+      if (gif_statuses[racing_gif] == ImageStatus::IN_USAGE || gif_statuses[racing_gif] == ImageStatus::FINISHED) {
+
+        if (!gifs_finished) {
+          racing_gif++;
+          gif_statuses.push_back(ImageStatus::UNINITIALIZED);
+
+          images.push_back(std::async(std::launch::async, [&gif_ = gif_, &gif_statuses, &gifs_finished, racing_gif]() {
+            gif_statuses[racing_gif] = ImageStatus::IN_PROGRESS;
+            auto result = gif_->Next();
+            gif_statuses[racing_gif] = ImageStatus::READY;
+            if (result == nullptr) {
+              gifs_finished = true;
+              gif_statuses[racing_gif] = ImageStatus::NULLIMG;
+            }
+            return result;
+            }));
+        }
+      }
+
+      if (gif_statuses[racing_webp] == ImageStatus::READY && webppics_statuses[racing_webp] == ImageStatus::UNINITIALIZED &&
+        (added_frames /*+ 1*/ >= racing_webp)) {
+        gif_statuses[racing_webp] = ImageStatus::IN_USAGE;
+        webppics_statuses[racing_webp] = ImageStatus::IN_PROGRESS;
+
+        webppics.push_back(std::async(std::launch::async, [&pic_even, &pic_odd, &images, &config, &racing_webp, &webppics_statuses]() {
+          auto curr_pic = racing_webp % 2 == 0 ? &pic_even : &pic_odd;
+          curr_pic->argb = reinterpret_cast<uint32_t*>(images[racing_webp].get());
+          if (!WebPEncode(&config, curr_pic)) {
+            std::cout << "Error on frame " << racing_webp << " with data address: " << (int)(curr_pic->argb) << std::endl;
+          }
+          webppics_statuses[racing_webp] = ImageStatus::FINISHED;
+          racing_webp++;
+          webppics_statuses.push_back(ImageStatus::UNINITIALIZED);
+          return curr_pic;
+          }));
+      }
+
+      if (webppics_statuses[added_frames] == ImageStatus::FINISHED && !adding_in_progress) {
+        timestamp += 50;
+        adding_in_progress = true;
+        auto pic = webppics[added_frames].get();
+        adders.push_back(std::async(std::launch::async, [&encoder, &pic, &config, &adding_in_progress, timestamp]() {
+          auto result = WebPAnimEncoderAdd(encoder, pic, timestamp, &config);
+          adding_in_progress = false;
+          return result;
+          }));
+        added_frames++;
+      }
+
+      if (gifs_finished) {
+        if (racing_gif == 0) {
+          break;
+        }
+        else if (webppics_statuses[racing_gif - 1] == ImageStatus::FINISHED) {
+          std::cout << "count " << racing_gif << std::endl;
+          break;
+        }
+      }
+      /* This gives the OS a hint that it may now consider rescheduling execution of this thread.
+         Makes this function more robust against cpu workload fluctuations and generally improves performance */
+      std::this_thread::yield();
+    }
+  }
+
+  WebPAnimEncoderAdd(encoder, NULL, timestamp, NULL);
+  WebPAnimEncoderAssemble(encoder, &webp_data);
+
+  utils::FileIO::WriteToFile(const_cast<char*>(reinterpret_cast<const char*>(webp_data.bytes)), filename, webp_data.size);
+
+  WebPDataClear(&webp_data);
+  WebPPictureFree(&pic_even);
+  WebPPictureFree(&pic_odd);
+  WebPMemoryWriterClear(&writer);
+  WebPAnimEncoderDelete(encoder);
+}
+
 /* Getter for the data length_ property */
 int Image::GetLength() const {
-	return length_;
+	return size_;
 }
 
 /* Getter for the height_ property */

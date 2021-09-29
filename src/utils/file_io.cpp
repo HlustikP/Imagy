@@ -55,6 +55,7 @@ int FileIO::WriteToFile(char* data, std::string filename, int length) {
 	}
 
 	output_file.write(data, length);
+  output_file.close();
 	return 0;
 };
 

@@ -1,17 +1,47 @@
-include_directories(${PROJECT_SOURCE_DIR}/src/headers
-					)
-add_executable(libwebp_test main.cpp) #main entry file
+function(check_lib lib_name var_name env_name file_name header_only)
+	# First we check for the file inside the project's libs folder
+	if(EXISTS "${CMAKE_SOURCE_DIR}/src/libs/${file_name}.lib" OR (header_only AND EXISTS "${CMAKE_SOURCE_DIR}/src/headers/${file_name}"))
+		if(NOT header_only)
+			set(${var_name} "${CMAKE_SOURCE_DIR}/src/libs" PARENT_SCOPE)
+			message(STATUS "${lib_name} found at ${CMAKE_SOURCE_DIR}/src/libs/${file_name}.lib")
+		else()
+			message(STATUS "${lib_name} header-only found at ${CMAKE_SOURCE_DIR}/src/headers/${file_name}")
+		endif()
+	# If it is not found, we check for an environment variable
+	elseif(DEFINED ENV{${env_name}})
+		if(NOT header_only)
+			set(${var_name} "$ENV{${env_name}}" PARENT_SCOPE)
+			message(STATUS "${lib_name} found at $ENV{${env_name}}/${file_name}.lib via environment variable ${env_name}")
+		else()
+			message(STATUS "${lib_name} header-only found at $ENV{${env_name}} via environment variable ${env_name}")
+		endif()
+		include_directories($ENV{${env_name}})
+	else()
+		message(SEND_ERROR "${lib_name} not found")
+	endif()
+endfunction()
+
+check_lib("ZLIB" "zlib_dir" "ZLIB_INCLUDE" "zlib" FALSE)
+check_lib("Boost" "boost_dir" "BOOST_ROOT" "boost" TRUE)
+check_lib("JPEGLIB" "jpeglib_dir" "JPEGLIB_INCLUDE" "jpeg" FALSE)
+check_lib("LIBPNG" "libpng_dir" "LIBPNG_INCLUDE" "libpng16" FALSE)
+check_lib("libwebp" "libwebp_dir" "LIBWEBP_INCLUDE" "libwebp" FALSE)
+
+include_directories(${PROJECT_SOURCE_DIR}/src/headers)
+		
+add_executable(libwebp_test main.cpp) #defining a main entry file for testing purposes
 
 SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/src/libs")
 
 add_subdirectory(utils)
 add_subdirectory(image)
 			  
-# TODO: change this to make it first look for the libs in standard dirs for cross-platform compatibility
-target_link_libraries(libwebp_test 	${CMAKE_SOURCE_DIR}/src/libs/libwebp.lib
-					${CMAKE_SOURCE_DIR}/src/libs/libwebpdecoder.lib
-					${CMAKE_SOURCE_DIR}/src/libs/libwebpdemux.lib
+target_link_libraries(libwebp_test 	${libwebp_dir}/libwebp.lib
+					${libwebp_dir}/libwebpmux.lib
+					${libwebp_dir}/libwebpdemux.lib
+					${jpeglib_dir}/jpeg.lib
+					${libpng_dir}/libpng16.lib
+					${zlib_dir}/zlib.lib
 					${CMAKE_SOURCE_DIR}/src/libs/Release/utils.lib
-					${CMAKE_SOURCE_DIR}/src/libs/imagedec.lib
 					${CMAKE_SOURCE_DIR}/src/libs/Release/image.lib
 			)

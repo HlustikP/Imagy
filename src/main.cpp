@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "decode.h"
 #include "encode.h"
-#include "boost/gil.hpp"
-#include "gil/extension/io/png.hpp"
-#include "gil/extension/io/jpeg.hpp"
-#include "gil/extension/io/bmp.hpp"
 
+#include <windows.h>
 #include <iterator>
+#include <future>
+#include <chrono>
+#include <thread>
 
 namespace gil = boost::gil;
 
@@ -76,34 +76,49 @@ void test() {
 	std::cout << std::chrono::duration_cast<std::chrono::microseconds>(time_delta).count();
 }
 
+void test_gif() {
+  utils::DecodeGif gif((std::string)"test\\bigger.gif");
+  //utils::DecodeGif gif((std::string)"test\\unanimated.gif");
+
+  const auto width = gif.GetInfos().width;
+  const auto height = gif.GetInfos().height;
+
+  //const auto image = gif.Next();
+
+  //std::cout << "gif " << (uint64_t)image << std::endl;
+  const auto size = gif.GetInfos().height * gif.GetInfos().width * 4;
+  //std::vector<char> out;
+  //out.reserve(size);
+
+  auto img_count = 0;
+
+  while (true) {
+    auto image = gif.Next();
+    if (image == nullptr) {
+      break;
+    }
+    std::string s = "frame";
+    s += std::to_string(img_count);
+    s += ".txt";
+    utils::FileIO::WriteToFile((char*)image, s, size);
+    img_count++;
+  }
+}
+
 int main(int argc, const char* argv[]) {
-	//test();
-	/*std::string s = "test\\animated.webp";
-	int length = 0;
-	const auto data = utils::FileIO::GetDataFromFile(s, &length);
-	WebPData webp_data = { reinterpret_cast<uint8_t*>(data), length };
-	WebPDemuxer* demux = WebPDemux(&webp_data);
-	std::cout << WebPDemuxGetI(demux, WEBP_FF_CANVAS_WIDTH) << std::endl;
-	WebPMux* mux = WebPMuxCreate(&webp_data, 0);
-	
-	std::tuple<std::string, int> ayy{ "",1 };
+  auto start = std::chrono::system_clock::now();
+  auto end = std::chrono::system_clock::now();
+  auto diff = std::chrono::duration_cast <std::chrono::milliseconds> (end - start).count();
 
-	WebPDemuxDelete(demux);
-	WebPMuxDelete(mux);*/
+  //testAnimWebp();
+  image::Image img_rgb8_gif_to_webp((std::string)"test\\bigger.gif");
+  img_rgb8_gif_to_webp.WriteImgToFile((std::string)"bigger.webp", image::WEBP);
 
-	/*auto gif = utils::DecodeGif((std::string)"test\\animated.gif");
-	std::cout << gif.GetInfos().height << std::endl;
-	std::cout << gif.GetInfos().width << std::endl;
-	std::cout << gif.GetPacked().global_color_table << std::endl;
-	std::cout << gif.GetPacked().bit_depth << std::endl;
-	std::cout << gif.GetPacked().sorted << std::endl;
-	std::cout << gif.GetPacked().table_size << std::endl;*/
+  std::cout << "Done" << std::endl;
 
-	utils::DecodeGif gif((std::string)"test\\animation.gif");
-	auto infos = gif.GetInfos();
-	std::cout << infos.height << " " << infos.width << std::endl;
-	auto graph = gif.GetGraphicControl();
-	std::cout << graph.delay << " " << graph.disposal_method << std::endl;
+  end = std::chrono::system_clock::now();
+  diff = std::chrono::duration_cast <std::chrono::milliseconds> (end - start).count();
+  std::cout << "Time elapsed: " << diff << "ms" << std::endl;
 
 	std::cin.get();
 	return 0;

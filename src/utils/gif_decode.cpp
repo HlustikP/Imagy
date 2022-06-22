@@ -354,7 +354,6 @@ uint8_t* DecodeGif::HandleImageDescriptor(uint8_t* block_data) {
 };
 
 uint8_t* DecodeGif::HandleImageData(uint8_t* block_data) {
-	// TODO: Document this mess
 
 	auto next_pixel = 0;
 
@@ -659,7 +658,7 @@ GraphicControl DecodeGif::GetGraphicControl() const {
 }
 
 std::vector<uint8_t>* DecodeGif::GetImage() {
-  // Inverse of the check in PaintImg() because the image count got incremented in the meatime
+  // Inverse of the check in PaintImg() because the image count got incremented in the meantime
 	return (current_image_ % 2) == 1 ? &even_image_ : &odd_image_;
 }
 
@@ -690,7 +689,13 @@ uint8_t* DecodeGif::Next() {
     return nullptr;
   }
 
-  return &((*GetImage())[0]);
+  auto current_image = &((*GetImage())[0]);
+
+  if (local_packed_.interlace) {
+    current_image = Deinterlace(current_image);
+  }
+
+  return current_image;
 }
 
 uint8_t* DecodeGif::ParseOneRound(int curr_code_size, int& curr_bit, int& curr_code, uint8_t& sub_block_size, uint8_t* block_data) {
@@ -913,6 +918,62 @@ int DecodeGif::DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel, int w
 
   // Increment by four to get back to the last pixel written
   return curr_pixel + 4;
+}
+
+// Deinterlaces image, assigns data to current image vector and returns pointer to first element
+uint8_t* DecodeGif::Deinterlace(uint8_t* image)
+{
+  // Calculate current image
+  auto* curr_image = GetImage();
+  const auto width = infos_.width;
+  const auto height = infos_.height;
+  const auto memory_size = width * height * 4;
+  const auto line_size = width * 4;
+
+  auto* deinterlaced = new uint8_t[memory_size];
+  auto dest_pixel = deinterlaced;
+  auto source_pixel = 0;
+
+  const auto pass_2_start_padding = 4 * line_size;
+  const auto pass_3_start_padding = 2 * line_size;
+
+  // Interlacing for gifs as defined by the GIF89a standard is done in 4 passes
+  // Pass 1: Every 8th row, starting with row 0
+  for (auto dest_line = 0; dest_line <= height / 8 + (height % 8 == 0); dest_line++) {
+    for (auto dest_pixel = 0; dest_pixel < width * 4; dest_pixel++) {
+      deinterlaced[line_size * dest_line * 8 + dest_pixel] = (*curr_image)[source_pixel];
+      source_pixel++;
+    }
+  }
+  // Pass 2: Every 8th row, starting with row 4
+  for (auto dest_line = 0; dest_line < height / 8; dest_line++) {
+    for (auto dest_pixel = 0; dest_pixel < width * 4; dest_pixel++) {
+      deinterlaced[line_size * dest_line * 8 + dest_pixel + pass_2_start_padding] = (*curr_image)[source_pixel];
+      source_pixel++;
+    }
+  }
+  // Pass 3: Every 4th row, starting with row 2
+  for (auto dest_line = 0; dest_line < height / 4; dest_line++) {
+    for (auto dest_pixel = 0; dest_pixel < width * 4; dest_pixel++) {
+      deinterlaced[line_size * dest_line * 4 + dest_pixel + pass_3_start_padding] = (*curr_image)[source_pixel];
+      source_pixel++;
+    }
+  }
+  // Pass 4: Every 2nd row, starting with row 1
+  for (auto dest_line = 0; dest_line < height / 2; dest_line++) {
+    for (auto dest_pixel = 0; dest_pixel < width * 4; dest_pixel++) {
+      deinterlaced[line_size * dest_line * 2 + dest_pixel + line_size] = (*curr_image)[source_pixel];
+      source_pixel++;
+    }
+  }
+
+  std::cout << "source_pixel: " << source_pixel;
+
+  curr_image->assign(deinterlaced, deinterlaced + memory_size);
+
+  utils::FileIO::WriteToFile((char*)deinterlaced, "navmap.txt", memory_size);
+
+  return deinterlaced;
 }
 
 } // namespace utils

@@ -107,13 +107,13 @@ int main(int argc, const char* argv[]) {
   auto diff = std::chrono::duration_cast <std::chrono::milliseconds> (end - start).count();
 
   //testAnimWebp();
-  image::Image img_rgb8_gif_to_webp((std::string)"test\\bigger.gif");
-  img_rgb8_gif_to_webp.WriteImgToFile((std::string)"bigger.webp", image::WEBP);
+  image::Image img_rgb8_gif_to_webp((std::string)"test\\navmap.gif");
+  img_rgb8_gif_to_webp.WriteImgToFile((std::string)"navmap.webp", image::WEBP);
 
   std::cout << "Done" << std::endl;
 
   end = std::chrono::system_clock::now();
-  diff = std::chrono::duration_cast <std::chrono::milliseconds> (end - start).count();
+  diff = std::chrono::duration_cast<std::chrono::milliseconds> (end - start).count();
   std::cout << "Time elapsed: " << diff << "ms" << std::endl;
 
 	std::cin.get();

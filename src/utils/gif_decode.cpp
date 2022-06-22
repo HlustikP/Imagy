@@ -967,11 +967,7 @@ uint8_t* DecodeGif::Deinterlace(uint8_t* image)
     }
   }
 
-  std::cout << "source_pixel: " << source_pixel;
-
   curr_image->assign(deinterlaced, deinterlaced + memory_size);
-
-  utils::FileIO::WriteToFile((char*)deinterlaced, "navmap.txt", memory_size);
 
   return deinterlaced;
 }

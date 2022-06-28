@@ -1,0 +1,13 @@
+{
+  "name": "Imagy node binding",
+  "version": "0.1.0",
+  "description": "Node.js binding for the Imagy c++ library",
+  "dependencies": {
+    "bindings": "^1.5.0",
+    "node-addon-api": "^5.0.0"
+  },
+  "scripts": {
+    "test": "node unit_tests.js"
+  },
+  "gypfile": true
+}

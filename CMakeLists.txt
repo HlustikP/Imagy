@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 set(CMAKE_CXX_STANDARD 17)
 
 project(libwebp_test)
@@ -17,4 +17,10 @@ if(WIN32) # Works for both 32 and 64 bit systems btw
 	endif()
 endif()
 
+message( STATUS ${CMAKE_CURRENT_SOURCE_DIR} )
+
+execute_process(COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/test.sh
+				WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_subdirectory(src)
+add_subdirectory(node)

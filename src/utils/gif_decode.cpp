@@ -933,40 +933,41 @@ uint8_t* DecodeGif::Deinterlace(uint8_t* image)
   auto* deinterlaced = new uint8_t[memory_size];
   auto dest_pixel = deinterlaced;
   auto source_pixel = 0;
+  auto line_skip = 0;
 
   const auto pass_2_start_padding = 4 * line_size;
   const auto pass_3_start_padding = 2 * line_size;
 
   // Interlacing for gifs as defined by the GIF89a standard is done in 4 passes
   // Pass 1: Every 8th row, starting with row 0
-  for (auto source_line = 0; source_line <= height / 8 + (height % 8 == 0); source_line++) {
-    const auto dest_line = line_size * source_line * 8;
+  for (auto dest_line = 0; dest_line <= height / 8 + (height % 8 == 0); dest_line++) {
+    line_skip = line_size * dest_line * 8;
     for (auto dest_pixel = 0; dest_pixel < width * 4; dest_pixel++) {
-      deinterlaced[dest_line + dest_pixel] = (*curr_image)[source_pixel];
+      deinterlaced[line_skip + dest_pixel] = (*curr_image)[source_pixel];
       source_pixel++;
     }
   }
   // Pass 2: Every 8th row, starting with row 4
-  for (auto source_line = 0; source_line < height / 8; source_line++) {
-    const auto dest_line = line_size * source_line * 8;
+  for (auto dest_line = 0; dest_line < height / 8; dest_line++) {
+    line_skip = line_size * dest_line * 8 + pass_2_start_padding;
     for (auto dest_pixel = 0; dest_pixel < width * 4; dest_pixel++) {
-      deinterlaced[line_size * source_line + dest_pixel + pass_2_start_padding] = (*curr_image)[source_pixel];
+      deinterlaced[line_skip + dest_pixel] = (*curr_image)[source_pixel];
       source_pixel++;
     }
   }
   // Pass 3: Every 4th row, starting with row 2
-  for (auto source_line = 0; source_line < height / 4; source_line++) {
-    const auto dest_line = line_size * source_line * 4;
+  for (auto dest_line = 0; dest_line < height / 4; dest_line++) {
+    line_skip = line_size * dest_line * 4 + pass_3_start_padding;
     for (auto dest_pixel = 0; dest_pixel < width * 4; dest_pixel++) {
-      deinterlaced[line_size * source_line + dest_pixel + pass_3_start_padding] = (*curr_image)[source_pixel];
+      deinterlaced[line_skip + dest_pixel] = (*curr_image)[source_pixel];
       source_pixel++;
     }
   }
   // Pass 4: Every 2nd row, starting with row 1
-  for (auto source_line = 0; source_line < height / 2; source_line++) {
-    const auto dest_line = line_size * source_line * 2;
+  for (auto dest_line = 0; dest_line < height / 2; dest_line++) {
+    line_skip = line_size * dest_line * 2 + line_size;
     for (auto dest_pixel = 0; dest_pixel < width * 4; dest_pixel++) {
-      deinterlaced[line_size * source_line + dest_pixel + line_size] = (*curr_image)[source_pixel];
+      deinterlaced[line_skip + dest_pixel] = (*curr_image)[source_pixel];
       source_pixel++;
     }
   }

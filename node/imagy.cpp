@@ -1,33 +1,29 @@
 #include <napi.h>
-#include "num.h"
-#include "file_io.h"
+#include "image.h"
 
-Napi::Value Add(const Napi::CallbackInfo& info) {
+Napi::String Convert(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
+	const auto arg0 = info[0].As<Napi::String>();
 
-  if (info.Length() < two) {
+  if (info.Length() < 1 || info.Length() > 2) {
     Napi::TypeError::New(env, "Wrong number of arguments")
         .ThrowAsJavaScriptException();
-    return env.Null();
+    return arg0;
   }
 
-  if (!info[0].IsNumber() || !info[1].IsNumber()) {
-    Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
-    return env.Null();
+  if (!info[0].IsString()) {
+    Napi::TypeError::New(env, "Wrong argument type").ThrowAsJavaScriptException();
+		return arg0;
   }
 
-  double arg0 = info[0].As<Napi::Number>().DoubleValue();
-  double arg1 = info[1].As<Napi::Number>().DoubleValue();
-  Napi::Number num = Napi::Number::New(env, arg0 + arg1);
+  image::Image img_rgb8_gif_to_webp((std::string)"media/interlacing.gif");
+  img_rgb8_gif_to_webp.WriteImgToFile((std::string)"media_output/interlacing.webp", image::WEBP);
 
-	char c = 'c';
-	utils::FileIO::WriteToFile(&c, "test.txt", 1);
-
-  return num;
+  return arg0;
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-  exports.Set(Napi::String::New(env, "add"), Napi::Function::New(env, Add));
+  exports.Set(Napi::String::New(env, "convert"), Napi::Function::New(env, Convert));
   return exports;
 }
 

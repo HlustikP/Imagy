@@ -2,12 +2,21 @@
   "name": "Imagy node binding",
   "version": "0.1.0",
   "description": "Node.js binding for the Imagy c++ library",
+  "type": "module",
   "dependencies": {
     "bindings": "^1.5.0",
     "node-addon-api": "^5.0.0"
   },
   "scripts": {
-    "test": "node unit_tests.js"
+    "postinstall": "npm test",
+    "test": "mocha unit_tests.js --require @babel/register"
   },
-  "gypfile": true
+  "gypfile": true,
+  "devDependencies": {
+    "@babel/cli": "^7.18.6",
+    "@babel/core": "^7.18.6",
+    "@babel/preset-env": "^7.18.6",
+    "@babel/register": "^7.18.6",
+    "mocha": "^10.0.0"
+  }
 }

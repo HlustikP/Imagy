@@ -23,4 +23,3 @@ execute_process(COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/test.sh
 				WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(src)
-add_subdirectory(node)

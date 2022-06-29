@@ -7,15 +7,22 @@
       'sources': [ "imagy.cpp" ],
       'include_dirs': [
         "<!@(node -p \"require('node-addon-api').include\")",
-		'headers'
+		'../src/headers'
      ],
 		'link_settings': {
 			'libraries': [
 			  'image',
-			  'utils'
+			  'utils',
+			  'libwebp',
+			  'libwebpmux',
+			  'libwebpdemux',
+			  'jpeg',
+			  'libpng16',
+			  'zlib'
 			],
 			'library_dirs': [
-			  'libs',
+                '../src/libs/',
+                '../src/libs/Release',
 			],
 	  },
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
@@ -25,7 +32,13 @@
 				"Release": {
 					"msvs_settings": {
 						"VCCLCompilerTool": {
-							"RuntimeLibrary": 2
+							"RuntimeLibrary": 2,
+							'ExceptionHandling': 1,
+						    "AdditionalOptions": [
+                                '-std:c++17',
+                                '/EHsc',
+                                '/GR'
+						    ],
 						}
 					}
 				}

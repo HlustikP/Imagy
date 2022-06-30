@@ -1,5 +1,5 @@
 import bindings from 'bindings';
-const addon = bindings('imagy');
+const imagy = bindings('imagy');
 import { createHash } from 'node:crypto';
 import assert from 'assert';
 import { createReadStream } from 'fs';
@@ -17,15 +17,19 @@ describe('Hash', () => {
 describe('Gif Decoding', function () {
     it('correctly decodes interlaced gif', function () {
         this.slow(800);
-        addon.convert("navmap.gif");
+        const target = tests.imageProcessing.gif_decoding.interlacing.target_file;
+        console.log(imagy.convert({
+            'image': tests.imageProcessing.gif_decoding.interlacing.test_file,
+            'outName': target,
+        }));
         const hash = createHash('sha256');
-        const input = createReadStream(tests.imageProcessing.gif_decoding.target_file);
+        const input = createReadStream(target);
         input.on('readable', () => {
             const data = input.read();
             if (data)
                 hash.update(data);
             else {
-                assert.equal(hash.digest('hex'), tests.imageProcessing.gif_decoding.target_hash);
+                assert.equal(hash.digest('hex'), tests.imageProcessing.gif_decoding.interlacing.target_hash);
             }
         });
     });

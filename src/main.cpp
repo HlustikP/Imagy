@@ -110,6 +110,8 @@ int main(int argc, const char* argv[]) {
   image::Image img_rgb8_gif_to_webp((std::string)"test\\navmap.gif");
   img_rgb8_gif_to_webp.WriteImgToFile((std::string)"navmap.webp", image::WEBP);
 
+  std::cout << image::Image::GetFileExtension((std::string)"interlacing.webp") << std::endl;
+
   std::cout << "Done" << std::endl;
 
   end = std::chrono::system_clock::now();

@@ -373,6 +373,9 @@ int Image::DecodeGif(std::string filename) {
   WebPConfigInit(&config);
 
   int timestamp = 0;
+  std::vector<int> frame_length;
+  frame_length.reserve(100);
+
   bool once = true;
 
   {
@@ -399,9 +402,11 @@ int Image::DecodeGif(std::string filename) {
     bool gifs_finished = false;
     bool adding_in_progress = false;
 
-    images.push_back(std::async(std::launch::async, [&gif_ = gif_, &gif_statuses, &gifs_finished, racing_gif]() {
+    images.push_back(std::async(std::launch::async, [&gif_ = gif_, &gif_statuses, &gifs_finished, racing_gif, &frame_length]() {
       gif_statuses[racing_gif] = ImageStatus::IN_PROGRESS;
       auto result = gif_->Next();
+      frame_length.push_back(gif_->GetGraphicControl().delay * 10);
+
       gif_statuses[racing_gif] = ImageStatus::READY;
       if (result == nullptr) {
         gifs_finished = true;
@@ -417,9 +422,11 @@ int Image::DecodeGif(std::string filename) {
           racing_gif++;
           gif_statuses.push_back(ImageStatus::UNINITIALIZED);
 
-          images.push_back(std::async(std::launch::async, [&gif_ = gif_, &gif_statuses, &gifs_finished, racing_gif]() {
+          images.push_back(std::async(std::launch::async, [&gif_ = gif_, &gif_statuses, &gifs_finished, racing_gif, &frame_length]() {
             gif_statuses[racing_gif] = ImageStatus::IN_PROGRESS;
             auto result = gif_->Next();
+            frame_length.push_back(gif_->GetGraphicControl().delay * 10);
+
             gif_statuses[racing_gif] = ImageStatus::READY;
             if (result == nullptr) {
               gifs_finished = true;
@@ -449,7 +456,7 @@ int Image::DecodeGif(std::string filename) {
       }
 
       if (webppics_statuses[added_frames] == ImageStatus::FINISHED && !adding_in_progress) {
-        timestamp += 50;
+        timestamp += added_frames == 0 ? 0 : frame_length.at(added_frames - 1);
         adding_in_progress = true;
         auto pic = webppics[added_frames].get();
         adders.push_back(std::async(std::launch::async, [&encoder, &pic, &config, &adding_in_progress, timestamp]() {
@@ -475,7 +482,7 @@ int Image::DecodeGif(std::string filename) {
     }
   }
 
-  WebPAnimEncoderAdd(encoder, NULL, timestamp, NULL);
+  WebPAnimEncoderAdd(encoder, NULL, timestamp + frame_length.back(), NULL);
   WebPAnimEncoderAssemble(encoder, &webp_data);
 
   utils::FileIO::WriteToFile(const_cast<char*>(reinterpret_cast<const char*>(webp_data.bytes)), filename, webp_data.size);

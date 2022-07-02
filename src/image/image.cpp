@@ -338,6 +338,7 @@ int Image::DecodeGif(std::string filename) {
   WebPData webp_data;
   WebPDataInit(&webp_data);
   WebPAnimEncoderOptions enc_options;
+  WebPAnimEncoderOptionsInit(&enc_options);
   WebPMemoryWriter writer;
   WebPMemoryWriter writer2;
   WebPConfig config;
@@ -345,7 +346,6 @@ int Image::DecodeGif(std::string filename) {
   config.sns_strength = 90;
   config.filter_sharpness = 6;
   config.alpha_quality = 90;
-  WebPAnimEncoderOptionsInit(&enc_options);
   auto* encoder = WebPAnimEncoderNew(width_, height_, &enc_options);
 
   pic_even.use_argb = true;
@@ -467,11 +467,13 @@ int Image::DecodeGif(std::string filename) {
         added_frames++;
       }
 
+      // Exit conditions
       if (gifs_finished) {
         if (racing_gif == 0) {
+          // Todo: This should be considered an error!
           break;
         }
-        else if (webppics_statuses[racing_gif - 1] == ImageStatus::FINISHED) {
+        else if (webppics_statuses[racing_gif - 1] == ImageStatus::FINISHED && !adding_in_progress) {
           std::cout << "count " << racing_gif << std::endl;
           break;
         }

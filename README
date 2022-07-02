@@ -20,3 +20,7 @@ For Ubuntu systems:
 `sudo apt install python3.8 -y`
 Verify via `python3.8 --version`
 Easiest way to make it accessable to `node-gyp` is to setup a `PYTHON` environment variable to the path of the `Python` executable.
+
+### Requirements
+-------------
+All images used for unit testing have their source credited [HERE](ATTRIBUTIONS.md)

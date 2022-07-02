@@ -474,7 +474,6 @@ int Image::DecodeGif(std::string filename) {
           break;
         }
         else if (webppics_statuses[racing_gif - 1] == ImageStatus::FINISHED && !adding_in_progress) {
-          std::cout << "count " << racing_gif << std::endl;
           break;
         }
       }

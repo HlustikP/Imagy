@@ -2,12 +2,17 @@
   'targets': [
     {
       'target_name': 'imagy',
-      'cflags!': [ "-fno-exceptions" ],
-      'cflags_cc!': [ "-fno-exceptions" ],
-      'sources': [ "imagy.cpp" ],
+      'cflags!': [ '-fno-exceptions' ],
+      'cflags_cc!': [ '-fno-exceptions' ],
+      'sources': [
+        'src/imagy.cpp',
+        'src/async_workers.hpp',
+        'src/convert.h',
+        'src/convert.cpp'
+      ],
       'include_dirs': [
         "<!@(node -p \"require('node-addon-api').include\")",
-		'../src/headers'
+		    '../src/headers'
      ],
 		'link_settings': {
 			'libraries': [
@@ -21,23 +26,23 @@
 			  'zlib'
 			],
 			'library_dirs': [
-                '../src/libs/',
-                '../src/libs/Release',
+        '../src/libs/',
+        '../src/libs/Release',
 			],
 	  },
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
-	  "conditions": [ ["OS=='win'",
+	  'conditions': [ ["OS=='win'",
 		{
-			"configurations": {
-				"Release": {
-					"msvs_settings": {
-						"VCCLCompilerTool": {
-							"RuntimeLibrary": 2,
+			'configurations': {
+				'Release': {
+					'msvs_settings': {
+						'VCCLCompilerTool': {
+							'RuntimeLibrary': 0,
 							'ExceptionHandling': 1,
-						    "AdditionalOptions": [
-                                '-std:c++17',
-                                '/EHsc',
-                                '/GR'
+						    'AdditionalOptions': [
+                  '-std:c++17',
+                  '/GR',
+                  '/EHsc',
 						    ],
 						}
 					}
@@ -46,6 +51,5 @@
 		}
 		]
 		]
-	}
-  ],
+	}],
 }

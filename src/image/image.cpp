@@ -493,6 +493,8 @@ int Image::DecodeGif(std::string filename) {
   WebPPictureFree(&pic_odd);
   WebPMemoryWriterClear(&writer);
   WebPAnimEncoderDelete(encoder);
+
+  return 0;
 }
 
 /* Getter for the data length_ property */

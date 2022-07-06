@@ -4,9 +4,16 @@ set(CMAKE_CXX_STANDARD 17)
 project(libwebp_test)
 
 # Windows specific stuff
-if(WIN32) # Works for both 32 and 64 bit systems btw
+if(WIN32)
 	# Define project as a console application
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:CONSOLE")
+	
+	# Set default build type to "Release"
+	if (NOT EXISTS ${CMAKE_BINARY_DIR}/CMakeCache.txt)
+	  if (NOT CMAKE_BUILD_TYPE)
+		set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+	  endif()
+	endif()
 	
 	# Only available for CMAKE 3.6.0 and higher	
 	if(NOT(CMAKE_MAJOR_VERSION LESS 3))

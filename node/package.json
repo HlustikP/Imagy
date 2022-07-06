@@ -9,7 +9,7 @@
   },
   "scripts": {
     "postinstall": "npm test",
-    "test": "jest"
+    "test": "jest --runInBand --no-cache"
   },
   "gypfile": true,
   "devDependencies": {

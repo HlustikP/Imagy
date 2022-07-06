@@ -1,23 +1,20 @@
 import bindings from 'bindings';
-const imagy = bindings('imagy');
-import { createHash } from 'node:crypto';
-import { createReadStream } from 'fs';
+import {createHash} from 'node:crypto';
+import {readFileSync} from 'fs';
 
-import { tests } from './test_ressources.js';
+import {tests} from './test_ressources.js';
+
+const imagy = bindings('imagy');
 
 const hash_algorithm = 'sha256';
 const digest = 'hex';
 
-const hashAndTest = (targetFile, hash, targetHash) => {
-    const input = createReadStream(targetFile);
-    input.on('readable', () => {
-        const data = input.read();
-        if (data)
-            hash.update(data);
-        else {
-            expect(hash.digest(digest)).toBe(targetHash);
-        }
-    });
+const hashAndTest = (targetFile, hash, targetHash) =>  {
+    const contents = readFileSync(targetFile);
+
+    hash.update(contents);
+
+    return hash.digest(digest) === targetHash;
 };
 
 const getTestData = (data) => {
@@ -39,7 +36,8 @@ describe('Test gif decoding and (animated) webp encoding',() => {
             'image': testFile,
             'outName': target,
         });
-        hashAndTest(target, createHash(hash_algorithm), targetHash);
+        // hashAndTest(target, createHash(hash_algorithm), targetHash);
+        expect(hashAndTest(target, createHash(hash_algorithm), targetHash)).toBeTruthy();
     });
 
     it('converts gif with transparency into webp', function () {
@@ -49,7 +47,8 @@ describe('Test gif decoding and (animated) webp encoding',() => {
             'image': testFile,
             'outName': target,
         });
-        hashAndTest(target, createHash(hash_algorithm), targetHash);
+        // hashAndTest(target, createHash(hash_algorithm), targetHash);
+        expect(hashAndTest(target, createHash(hash_algorithm), targetHash)).toBeTruthy();
     });
 
     it('converts interlaced gif into webp', function () {
@@ -59,7 +58,8 @@ describe('Test gif decoding and (animated) webp encoding',() => {
             'image': testFile,
             'outName': target,
         });
-        hashAndTest(target, createHash(hash_algorithm), targetHash);
+        // hashAndTest(target, createHash(hash_algorithm), targetHash);
+        expect(hashAndTest(target, createHash(hash_algorithm), targetHash)).toBeTruthy();
     });
 
     it('converts gif with local color palettes into webp', function () {
@@ -69,7 +69,8 @@ describe('Test gif decoding and (animated) webp encoding',() => {
             'image': testFile,
             'outName': target,
         });
-        hashAndTest(target, createHash(hash_algorithm), targetHash);
+        // hashAndTest(target, createHash(hash_algorithm), targetHash);
+        expect(hashAndTest(target, createHash(hash_algorithm), targetHash)).toBeTruthy();
     });
 });
 
@@ -81,7 +82,8 @@ describe('Test image conversions', () => {
             'image': testFile,
             'outName': target,
         });
-        hashAndTest(target, createHash(hash_algorithm), targetHash);
+        // hashAndTest(target, createHash(hash_algorithm), targetHash);
+        expect(hashAndTest(target, createHash(hash_algorithm), targetHash)).toBeTruthy();
     });
     it('de- and encodes bmp files', function () {
         const [testFile, targetFile, targetHash] = getTestData(tests.imageProcessing.image_conversion.bmp);
@@ -90,15 +92,27 @@ describe('Test image conversions', () => {
             'image': testFile,
             'outName': target,
         });
-        hashAndTest(target, createHash(hash_algorithm), targetHash);
+        // hashAndTest(target, createHash(hash_algorithm), targetHash);
+        expect(hashAndTest(target, createHash(hash_algorithm), targetHash)).toBeTruthy();
     });
-    it('de- and encodes png files', function () {
+    it('de- and encodes png files', () => {
         const [testFile, targetFile, targetHash] = getTestData(tests.imageProcessing.image_conversion.png);
         const target = targetFile;
         imagy.convert({
             'image': testFile,
             'outName': target,
         });
-        hashAndTest(target, createHash(hash_algorithm), targetHash);
+        expect(hashAndTest(target, createHash(hash_algorithm), targetHash)).toBeTruthy();
+    });
+});
+
+describe('Test async', function () {
+    it('returns a resolvable promise', async () => {
+        expect.assertions(1);
+        const [testFile, targetFile] = getTestData(tests.imageProcessing.image_conversion.png);
+        await expect(imagy.convertAsync({
+            'image': testFile,
+            'outName': targetFile,
+        })).resolves.toBeTruthy();
     });
 });

@@ -35,6 +35,8 @@ SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/src/libs")
 
 add_subdirectory(utils)
 add_subdirectory(image)
+
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 			  
 target_link_libraries(libwebp_test 	${libwebp_dir}/libwebp.lib
 					${libwebp_dir}/libwebpmux.lib

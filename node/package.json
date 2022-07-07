@@ -1,5 +1,5 @@
 {
-  "name": "Imagy node binding",
+  "name": "imagy",
   "version": "0.1.0",
   "description": "Node.js binding for the Imagy c++ library",
   "type": "module",

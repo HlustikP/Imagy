@@ -8,7 +8,9 @@
         'src/imagy.cpp',
         'src/async_workers.hpp',
         'src/convert.h',
-        'src/convert.cpp'
+        'src/convert.cpp',
+        'src/image.cpp',
+        'src/image.h'
       ],
       'include_dirs': [
         "<!@(node -p \"require('node-addon-api').include\")",

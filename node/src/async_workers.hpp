@@ -10,12 +10,20 @@ public:
 		: Napi::AsyncWorker(env), deferred_(Napi::Promise::Deferred::New(env)), in_filename_(in_filename), out_filename_(out_filename), format_(format) {
 	}
 
+  ConversionWorker(Napi::Env& env, image::Image* img, std::string out_filename, image::ImgFormat format)
+    : Napi::AsyncWorker(env), deferred_(Napi::Promise::Deferred::New(env)), img_(img), out_filename_(out_filename), format_(format) {
+  }
+
 	~ConversionWorker() {}
 
 	// Executed inside a new thread
 	void Execute() {
-		image::Image img(in_filename_);
-		const auto result = img.WriteImgToFile(out_filename_, format_);
+    auto img = img_ == nullptr ? new image::Image(in_filename_) : img_;
+		const auto result = img->WriteImgToFile(out_filename_, format_);
+
+    if (img_ == nullptr) {
+        delete img;
+    }
 
 		switch (result) {
 		case 0:
@@ -51,6 +59,7 @@ public:
 
 private:
 	std::string in_filename_;
+  image::Image* img_ = nullptr;
 	std::string out_filename_;
 	image::ImgFormat format_;
 	Napi::Promise::Deferred deferred_;

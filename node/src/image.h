@@ -13,7 +13,7 @@ public:
     ~Image();
 
 private:
-    void WriteToFile(const Napi::CallbackInfo& info);
+    Napi::Value WriteToFile(const Napi::CallbackInfo& info);
     void WriteToFileSync(const Napi::CallbackInfo& info);
     // filename and format are out parameters, returns false on error
     static bool GetOutInfos(const Napi::CallbackInfo& info, std::string* filename, image::ImgFormat* format);

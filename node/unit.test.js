@@ -21,7 +21,8 @@ const getTestData = (data) => {
     return [data.testFile, data.targetFile, data.targetHash];
 }
 
-describe('Test sha256 hashing implementation, as it is fundamental to the functioning of the following test suites', () => {
+// Important to check, as it is fundamental to the functioning of the following test suites
+describe('Test sha256 hashing implementation', () => {
     it('correctly hashes via sha256', () => {
         const hash = createHash(hash_algorithm);
 
@@ -131,10 +132,27 @@ describe('Test async', () => {
 });
 
 describe('Test Image class', () => {
-    it('returns an Instance of class Image', async () => {
+    it('returns an Instance of class Image',() => {
+        const img = new imagy.Image(tests.imageProcessing.image_conversion.jpeg.testFile);
+
+        expect(img instanceof imagy.Image).toBeTruthy();
+    });
+
+    it('synchronously encodes image and writes it to a file',() => {
+        const [testFile, targetFile, targetHash] = getTestData(tests.imageProcessing.image_conversion.jpeg);
+        const img = new imagy.Image(testFile);
+
+        img.writeToFileSync(targetFile);
+
+        expect(hashAndTest(targetFile, createHash(hash_algorithm), targetHash)).toBeTruthy();
+    });
+
+    it('asynchronously encodes image and writes it to a file',async () => {
         expect.assertions(1);
 
-        const img = new imagy.Image(tests.imageProcessing.image_conversion.jpeg.testFile);
-        expect(img instanceof imagy.Image).toBeTruthy();
+        const [testFile, targetFile] = getTestData(tests.imageProcessing.image_conversion.jpeg);
+        const img = new imagy.Image(testFile);
+
+        await expect(img.writeToFile(targetFile)).resolves.toBeTruthy();
     });
 });

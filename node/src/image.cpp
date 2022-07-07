@@ -5,7 +5,7 @@ Napi::Object Image::Init(Napi::Env env, Napi::Object exports) {
         DefineClass(env,
             "Image",
             { InstanceMethod("writeToFileSync", &Image::WriteToFileSync),
-                       InstanceMethod("writeToFile", &Image::WriteToFile)
+              InstanceMethod("writeToFile", &Image::WriteToFile)
             });
 
     Napi::FunctionReference* constructor = new Napi::FunctionReference();
@@ -34,7 +34,7 @@ Image::~Image() {
     delete img_;
 }
 
-void Image::WriteToFile(const Napi::CallbackInfo& info) {
+Napi::Value Image::WriteToFile(const Napi::CallbackInfo& info) {
     std::string out_file;
     image::ImgFormat format;
 
@@ -44,12 +44,14 @@ void Image::WriteToFile(const Napi::CallbackInfo& info) {
     if (!GetOutInfos(info, &out_file, &format)) {
         auto error = Napi::Error::New(info.Env(), "Cannot infer file format from output file string");
         deferred.Reject(error.Value());
-        return;
+        return deferred.Promise();
     }
 
     ConversionWorker* conversion_worker = new ConversionWorker(env, img_, out_file, format);
     auto promise = conversion_worker->GetPromise();
     conversion_worker->Queue();
+
+    return promise;
 }
 
 void Image::WriteToFileSync(const Napi::CallbackInfo& info) {

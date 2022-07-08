@@ -100,6 +100,44 @@ int Image::ChangeScale(unsigned int target_height, unsigned int target_width, In
   return 0;
 }
 
+int Image::FlipD() {
+  auto forward_itr = &(data_[0]);
+  auto backward_itr = &(data_[0]) + size_ - 1;
+
+  auto i = 0;
+
+  if (!alpha_) {
+    while (forward_itr < backward_itr) {
+      std::swap(*forward_itr, *(backward_itr - 2));
+      std::swap(*(forward_itr + 1), *(backward_itr - 1));
+      std::swap(*(forward_itr + 2), *(backward_itr));
+
+      forward_itr += 3;
+      backward_itr -= 3;
+    }
+  } else {
+    while (forward_itr < backward_itr) {
+      std::swap(*forward_itr, *(backward_itr - 3));
+      std::swap(*(forward_itr + 1), *(backward_itr - 2));
+      std::swap(*(forward_itr + 2), *(backward_itr - 1));
+      std::swap(*(forward_itr + 3), *(backward_itr));
+
+      forward_itr += 4;
+      backward_itr -= 4;
+    }
+  }
+
+  return 0;
+}
+
+int Image::FlipV() {
+  return 0;
+}
+
+int Image::FlipH() {
+  return 0;
+}
+
 // TODO: Implement validation methods to filter out corrupt/forged images
 /*	Load image data into data_ as interleaved rbg or rgba vector;
 	  returns 0 on success and 1 on error */

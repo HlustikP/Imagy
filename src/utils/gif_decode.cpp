@@ -667,7 +667,7 @@ uint16_t DecodeGif::ParseBytes(uint8_t least_sig, uint8_t most_sig) const {
 }
 
 void DecodeGif::CopySkipTransparents(uint8_t* begin, uint8_t* end, uint8_t* destination) {
-  auto size = transparent_pixels_.size();
+  const auto size = transparent_pixels_.size();
   auto curr_pixel_index = size - 1;
   auto next_transparent_pixel = transparent_pixels_.back();
 
@@ -699,7 +699,7 @@ uint8_t* DecodeGif::Next() {
 }
 
 uint8_t* DecodeGif::ParseOneRound(int curr_code_size, int& curr_bit, int& curr_code, uint8_t& sub_block_size, uint8_t* block_data) {
-  const auto BYTE_SIZE = 8;
+  constexpr auto BYTE_SIZE = 8;
 
   // Determine how many bits left and right need to be kicked out via shift to only analyze the current code
   auto lshift = BYTE_SIZE - curr_code_size - curr_bit;
@@ -856,10 +856,10 @@ int DecodeGif::DecodeLZWToRGB(std::vector<uint8_t>* image, int curr_pixel, int w
   const auto horizontal_pad = (width - image_descriptor_.witdh) * 4;
   const auto rightmost_pos = image_descriptor_.witdh - 1;
   auto inner_image_pos = rightmost_pos;
-  auto transparent_pixel = graphic_control_.transperent_color_index;
-  auto transparency = graphic_control_.transparency;
+  const auto transparent_pixel = graphic_control_.transperent_color_index;
+  const auto transparency = graphic_control_.transparency;
   auto color = 0;
-  auto color_table = local_packed_.local_color_table ? &local_color_table_ : &global_color_table_;
+  const auto color_table = local_packed_.local_color_table ? &local_color_table_ : &global_color_table_;
 
   for (signed int code = code_stream_.size() - 1; code >= 0; code--) {
     auto curr_code = code_stream_[code];
@@ -931,7 +931,6 @@ uint8_t* DecodeGif::Deinterlace(uint8_t* image)
   const auto line_size = width * 4;
 
   auto* deinterlaced = new uint8_t[memory_size];
-  auto dest_pixel = deinterlaced;
   auto source_pixel = 0;
   auto line_skip = 0;
 

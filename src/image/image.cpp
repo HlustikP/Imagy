@@ -12,7 +12,6 @@ Image::Image(std::string& filename) {
 };
 
 Image::Image(std::vector<uint8_t> data, ColorModel) {
-
 };
  
 /*  Checks file extension of filename file against known ones
@@ -25,7 +24,6 @@ ImgFormat Image::GetFileExtension(std::string& filename) {
 	}
 
 	// spamming if-checks because switch is illegal with string types
-  // TODO: find alternative more elegant check method
 	if (path.extension() == ".bmp" || path.extension() == ".dib") {
 		return BMP;
 	}
@@ -49,6 +47,58 @@ ImgFormat Image::GetFileExtension(std::string& filename) {
 
 	return INVALID;
 };
+
+/* Changes Scale of image using bilinear interpolation
+   If either aurgument has value 0, it will be calculated to preserve ratio
+   Returns 0 on success, 1 on error */
+int Image::ChangeScale(unsigned int target_height, unsigned int target_width, InterpolationAlgorithms algorithm) {
+  if (target_height == 0 && target_width == 0) {
+    return 1;
+  }
+
+  if (target_height == 0) {
+    const auto rel_diff = static_cast<double>(target_width) / static_cast<double>(width_);
+    target_height = height_ * rel_diff;
+  }
+  if (target_width == 0) {
+    const auto rel_diff = static_cast<double>(target_height) / static_cast<double>(width_);
+    target_width = height_ * rel_diff;
+  }
+
+  const auto byte_rowsize = alpha_ ? width_ * 4 : width_ * 3;
+  gil::rgb8_image_t new_img(target_width, target_height);
+  const auto src_view = gil::interleaved_view(width_, height_, reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
+
+  switch (algorithm) {
+    case NEAREST_NEIGHBOUR:
+      gil::resize_view(src_view,
+        gil::view(new_img),
+        gil::nearest_neighbor_sampler{}
+      );
+      break;
+    case BILINEAR:
+      [[fallthrough]]; // bilinear IS the default
+    default:
+      gil::resize_view(src_view,
+        gil::view(new_img),
+        gil::bilinear_sampler{}
+      );
+  }
+
+  width_ = target_width;
+  height_ = target_height;
+  const auto channel_count = alpha_ ? 4 : 3;
+
+  size_ = width_ * height_ * channel_count;
+  data_.reserve(size_);
+
+  const auto iter = gil::view(new_img).begin();
+  auto& pixels = *iter;
+
+  std::copy_n(&(pixels[0]), size_, data_.begin());
+
+  return 0;
+}
 
 // TODO: Implement validation methods to filter out corrupt/forged images
 /*	Load image data into data_ as interleaved rbg or rgba vector;

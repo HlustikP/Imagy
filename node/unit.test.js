@@ -155,4 +155,22 @@ describe('Test Image class', () => {
 
         await expect(img.writeToFile(targetFile)).resolves.toBeTruthy();
     });
+
+    it('synchronously rescales image',() => {
+        const [testFile, targetFile, targetHash] = getTestData(tests.imageProcessing.rescaling.bilinear);
+        const img = new imagy.Image(testFile);
+
+        img.rescaleSync(0, 4000).writeToFileSync(targetFile);
+
+        expect(hashAndTest(targetFile, createHash(hash_algorithm), targetHash)).toBeTruthy();
+    });
+
+    it('synchronously rescales image via a non-default algorithm',() => {
+        const [testFile, targetFile, targetHash] = getTestData(tests.imageProcessing.rescaling.nearest_neighbour);
+        const img = new imagy.Image(testFile);
+
+        img.rescaleSync(0, 4000, imagy.Image.Algorithm.NEAREST_NEIGHBOUR).writeToFileSync(targetFile);
+
+        expect(hashAndTest(targetFile, createHash(hash_algorithm), targetHash)).toBeTruthy();
+    });
 });

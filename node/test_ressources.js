@@ -42,6 +42,18 @@ const imageProcessing = {
             targetFile: 'media_output/cat.png',
             targetHash: '6c18ae9a2cf06365304d246f09be7389406dbaa09d84199d5fa0786f9375a67c',
         },
+    },
+    rescaling: {
+        bilinear: {
+            testFile: 'media/cat.jpg',
+            targetFile: 'media_output/cat.jpg',
+            targetHash: '7a12433ce036c1e798fcb514c4adbb4af2db2afd7341aa9a9efab719d4fe6780',
+        },
+        nearest_neighbour: {
+            testFile: 'media/cat.jpg',
+            targetFile: 'media_output/cat.jpg',
+            targetHash: 'ec18721518a4b58cedd98089f5f607ad652c9f6af2cec9d921c534e9d69d91e0',
+        },
     }
 }
 

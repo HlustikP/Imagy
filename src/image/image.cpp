@@ -52,6 +52,7 @@ ImgFormat Image::GetFileExtension(std::string& filename) {
    If either aurgument has value 0, it will be calculated to preserve ratio
    Returns 0 on success, 1 on error */
 int Image::ChangeScale(unsigned int target_height, unsigned int target_width, InterpolationAlgorithms algorithm) {
+  // TODO: Handle animated images
   if (target_height == 0 && target_width == 0) {
     return 1;
   }
@@ -101,6 +102,7 @@ int Image::ChangeScale(unsigned int target_height, unsigned int target_width, In
 }
 
 int Image::FlipD() {
+  // TODO: Handle animated images
   auto forward_itr = &(data_[0]);
   auto backward_itr = &(data_[0]) + size_ - 1;
 
@@ -131,10 +133,12 @@ int Image::FlipD() {
 }
 
 int Image::FlipV() {
+  // TODO: Handle animated images
   return 0;
 }
 
 int Image::FlipH() {
+  // TODO: Handle animated images
   return 0;
 }
 

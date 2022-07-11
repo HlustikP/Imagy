@@ -25,6 +25,10 @@ Easiest way to make it accessable to `node-gyp` is to setup a `PYTHON` environme
 
 ## Installation
 WIP
+# Windows
+
+# Linux:
+- ZLIB: `sudo apt-get install zlib1g-dev`
 
 ## Troubleshooting
 - Problem: Compiling the c++ library succeeds but compiling the binding with `node-gyp`throws linker errors. 

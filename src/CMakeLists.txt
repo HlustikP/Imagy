@@ -1,9 +1,9 @@
 function(check_lib lib_name var_name env_name file_name header_only)
 	# First we check for the file inside the project's libs folder
-	if(EXISTS "${CMAKE_SOURCE_DIR}/src/libs/${file_name}.lib" OR (header_only AND EXISTS "${CMAKE_SOURCE_DIR}/src/headers/${file_name}"))
+	if(EXISTS "${CMAKE_SOURCE_DIR}/src/libs/${PRESET}/${file_name}.lib" OR (header_only AND EXISTS "${CMAKE_SOURCE_DIR}/src/headers/${file_name}"))
 		if(NOT header_only)
-			set(${var_name} "${CMAKE_SOURCE_DIR}/src/libs" PARENT_SCOPE)
-			message(STATUS "${lib_name} found at ${CMAKE_SOURCE_DIR}/src/libs/${file_name}.lib")
+			set(${var_name} "${CMAKE_SOURCE_DIR}/src/libs/${PRESET}" PARENT_SCOPE)
+			message(STATUS "${lib_name} found at ${CMAKE_SOURCE_DIR}/src/libs/${PRESET}/${file_name}.lib")
 		else()
 			message(STATUS "${lib_name} header-only found at ${CMAKE_SOURCE_DIR}/src/headers/${file_name}")
 		endif()
@@ -27,23 +27,34 @@ check_lib("JPEGLIB" "jpeglib_dir" "JPEGLIB_INCLUDE" "jpeg" FALSE)
 check_lib("LIBPNG" "libpng_dir" "LIBPNG_INCLUDE" "libpng16" FALSE)
 check_lib("libwebp" "libwebp_dir" "LIBWEBP_INCLUDE" "libwebp" FALSE)
 
-include_directories(${PROJECT_SOURCE_DIR}/src/headers)
-		
-add_executable(libwebp_test main.cpp) #defining a main entry file for testing purposes
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/src/libs/${PRESET}")
 
-SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/src/libs")
+add_library(utils STATIC)
+add_library(image STATIC)
+
+include_directories(${PROJECT_SOURCE_DIR}/src/headers)
 
 add_subdirectory(utils)
 add_subdirectory(image)
-
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+		
+add_executable(imagy_test) #defining a main entry file for testing purposes
+target_sources(imagy_test PRIVATE "${CMAKE_SOURCE_DIR}/src/main.cpp")
 			  
-target_link_libraries(libwebp_test 	${libwebp_dir}/libwebp.lib
+target_link_libraries(imagy_test 	${libwebp_dir}/libwebp.lib
 					${libwebp_dir}/libwebpmux.lib
 					${libwebp_dir}/libwebpdemux.lib
 					${jpeglib_dir}/jpeg.lib
 					${libpng_dir}/libpng16.lib
-					${zlib_dir}/zlib.lib
-					${CMAKE_SOURCE_DIR}/src/libs/Release/utils.lib
-					${CMAKE_SOURCE_DIR}/src/libs/Release/image.lib
+					utils
+					image
 			)
+
+if (WIN32)
+    target_link_libraries(imagy_test ${zlib_dir}/zlib.lib)
+endif
+
+if (UNIX)
+    target_link_libraries(imagy_test ZLIB::ZLIB)
+endif
+
+install(TARGETS utils image ARCHIVE DESTINATION lib)

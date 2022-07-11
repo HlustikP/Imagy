@@ -17,3 +17,5 @@ trim_trailing_whitespace = false
 [*.{cpp,h,hpp}]
 indent_size = 2
 trim_trailing_whitespace = false
+# Suppress arithmetic overflow warning is its way too sensitive
+dotnet_diagnostic.C26451.severity = none

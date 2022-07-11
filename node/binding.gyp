@@ -27,16 +27,15 @@
 			  'libpng16',
 			  'zlib'
 			],
-			'library_dirs': [
-        '../src/libs/',
-        '../src/libs/Release',
-			],
 	  },
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
 	  'conditions': [ ["OS=='win'",
 		{
 			'configurations': {
 				'Release': {
+          'library_dirs': [
+            '../src/libs/x64-release',
+			    ],
 					'msvs_settings': {
 						'VCCLCompilerTool': {
 							'RuntimeLibrary': 0,

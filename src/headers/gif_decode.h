@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <cmath>
 
 #include "file_io.h"
 

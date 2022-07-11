@@ -1,6 +1,2 @@
-project(image)
-
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-
-ADD_LIBRARY( image STATIC
-             image.cpp)
+target_sources(image
+            PRIVATE "${CMAKE_SOURCE_DIR}/src/image/image.cpp")

@@ -21,11 +21,23 @@ function(check_lib lib_name var_name env_name file_name header_only)
 	endif()
 endfunction()
 
-check_lib("ZLIB" "zlib_dir" "ZLIB_INCLUDE" "zlib" FALSE)
-check_lib("Boost" "boost_dir" "BOOST_ROOT" "boost" TRUE)
-check_lib("JPEGLIB" "jpeglib_dir" "JPEGLIB_INCLUDE" "jpeg" FALSE)
-check_lib("LIBPNG" "libpng_dir" "LIBPNG_INCLUDE" "libpng16" FALSE)
-check_lib("libwebp" "libwebp_dir" "LIBWEBP_INCLUDE" "libwebp" FALSE)
+if(WIN32)
+    check_lib("ZLIB" "zlib_dir" "ZLIB_INCLUDE" "zlib" FALSE)
+    check_lib("Boost" "boost_dir" "BOOST_ROOT" "boost" TRUE)
+    check_lib("JPEGLIB" "jpeglib_dir" "JPEGLIB_INCLUDE" "jpeg" FALSE)
+    check_lib("LIBPNG" "libpng_dir" "LIBPNG_INCLUDE" "libpng16" FALSE)
+    check_lib("libwebp" "libwebp_dir" "LIBWEBP_INCLUDE" "libwebp" FALSE)
+endif()
+
+if(UNIX)
+    find_package(ZLIB REQUIRED)
+    find_package(PNG REQUIRED)
+    list(APPEND CMAKE_PREFIX_PATH "/opt/libjpeg-turbo/lib64/cmake/libjpeg-turbo")
+    find_package(libjpeg-turbo CONFIG REQUIRED)
+    find_library(WEBP_LIBRARY NAMES webp)
+    find_library(WEBP_DEMUX_LIBRARY NAMES webpdemux)
+    find_library(WEBP_MUX_LIBRARY NAMES webpmux)
+endif()
 
 SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/src/libs/${PRESET}")
 
@@ -40,21 +52,29 @@ add_subdirectory(image)
 add_executable(imagy_test) #defining a main entry file for testing purposes
 target_sources(imagy_test PRIVATE "${CMAKE_SOURCE_DIR}/src/main.cpp")
 			  
-target_link_libraries(imagy_test 	${libwebp_dir}/libwebp.lib
-					${libwebp_dir}/libwebpmux.lib
-					${libwebp_dir}/libwebpdemux.lib
-					${jpeglib_dir}/jpeg.lib
-					${libpng_dir}/libpng16.lib
+target_link_libraries(imagy_test 	
 					utils
 					image
 			)
 
-if (WIN32)
-    target_link_libraries(imagy_test ${zlib_dir}/zlib.lib)
-endif
-
-if (UNIX)
-    target_link_libraries(imagy_test ZLIB::ZLIB)
-endif
+if(WIN32)
+    target_link_libraries(imagy_test ${zlib_dir}/zlib.lib
+        ${libpng_dir}/libpng16.lib
+        ${jpeglib_dir}/jpeg.lib
+        ${libwebp_dir}/libwebp.lib
+				${libwebp_dir}/libwebpmux.lib
+				${libwebp_dir}/libwebpdemux.lib
+    )
+endif()
+message(libjpeg-turbo)
+if(UNIX)
+    target_link_libraries(imagy_test ZLIB::ZLIB
+        ${PNG_LIBRARY}
+        libjpeg-turbo
+        ${WEBP_LIBRARY}
+        ${WEBP_DEMUX_LIBRARY}
+        ${WEBP_MUX_LIBRARY}
+    )
+endif()
 
 install(TARGETS utils image ARCHIVE DESTINATION lib)

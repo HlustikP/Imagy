@@ -26,13 +26,17 @@ Easiest way to make it accessable to `node-gyp` is to setup a `PYTHON` environme
 ## Installation
 WIP
 # Windows
+- Use the VS Dev Console for the c++ library and another shell for the binding.
 
 # Linux:
 - ZLIB: `sudo apt-get install zlib1g-dev`
+- libpng: `sudo apt install libpng-dev`
+- libjpeg: Follow build and install instructions https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/BUILDING.md
 
 ## Troubleshooting
 - Problem: Compiling the c++ library succeeds but compiling the binding with `node-gyp`throws linker errors. 
 > Solution: Check whether both, the library and the binding, are build for the same architecture (32 vs 64 bit), the same build type  (Release etc.) and the same Toolset and runtime libraries.
+If that doesnt help, try running the `node-gyp` commands in sequence: `node-gyp configure` and `node-gyp build`.
 
 ## Attributions
 

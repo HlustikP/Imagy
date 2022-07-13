@@ -1,12 +1,12 @@
 let module;
 
-// Load precompiled binary for windows.
-if (process.platform === "win32" && process.arch === "x64") {
+// Load pre-build binaries for windows and linux 64 bit systems...
+if (process.platform === 'win32' && process.arch === 'x64') {
 	module = require('./bin/winx64/imagy');
-} else if(process.platform === "win32" && process.arch === "ia32") {
-	//module = require('./bin/winx86/imagy');   CURENTLY UNSUPPORTED
+} else if (process.platform === 'linux' && process.arch === 'x64') {
+  module = require('./bin/linux/imagy');
 } else {
-	// Load self-built binary for other platforms.
+	// ...load self-built binary for other platforms. 32 bit and arm systems are currently unsupported.
 	module = require('./build/Release/imagy');
 }
 

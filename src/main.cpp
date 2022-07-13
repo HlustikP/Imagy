@@ -107,10 +107,11 @@ int main(int argc, const char* argv[]) {
   auto diff = std::chrono::duration_cast <std::chrono::milliseconds> (end - start).count();
 
   //testAnimWebp();
-  image::Image img_rgb8_gif_to_webp((std::string)"test\\vanilla.gif");
-  img_rgb8_gif_to_webp.WriteImgToFile((std::string)"vanilla.webp", image::WEBP);
+  std::string input = "test\\vanilla.gif";
+  std::string output = "vanilla.webp";
 
-  std::cout << image::Image::GetFileExtension((std::string)"interlacing.webp") << std::endl;
+  image::Image img_rgb8_gif_to_webp(input);
+  img_rgb8_gif_to_webp.WriteImgToFile(output, image::WEBP);
 
   std::cout << "Done" << std::endl;
 

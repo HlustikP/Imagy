@@ -37,7 +37,8 @@ WIP
 - Problem: Compiling the c++ library succeeds but compiling the binding with `node-gyp`throws linker errors. 
 > Solution: Check whether both, the library and the binding, are build for the same architecture (32 vs 64 bit), the same build type  (Release etc.) and the same Toolset and runtime libraries.
 If that doesnt help, try running the `node-gyp` commands in sequence: `node-gyp configure` and `node-gyp build`.
-
+- Problem: I linked everything and every library has been found by cmake but it still throws linker errors on Linux.
+> Solution: Try executing `ninja` with root privileges
 ## Attributions
 
 All images used for unit testing have their source credited [HERE](ATTRIBUTIONS.md)

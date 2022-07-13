@@ -4,6 +4,7 @@
       'target_name': 'imagy',
       'cflags!': [ '-fno-exceptions' ],
       'cflags_cc!': [ '-fno-exceptions' ],
+      'cflags_cc': [ '-std=gnu++17' ],
       'sources': [
         'src/imagy.cpp',
         'src/async_workers.hpp',
@@ -16,21 +17,21 @@
         "<!@(node -p \"require('node-addon-api').include\")",
 		    '../src/headers'
      ],
-		'link_settings': {
-			'libraries': [
-			  'image',
-			  'utils',
-			  'libwebp',
-			  'libwebpmux',
-			  'libwebpdemux',
-			  'jpeg',
-			  'libpng16',
-			  'zlib'
-			],
-	  },
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
 	  'conditions': [ ["OS=='win'",
 		{
+      'link_settings': {
+			  'libraries': [
+			    'image',
+			    'utils',
+			    'libwebp',
+			    'libwebpmux',
+			    'libwebpdemux',
+			    'jpeg',
+			    'libpng16',
+			    'zlib'
+			  ],
+	  },
 			'configurations': {
 				'Release': {
           'library_dirs': [
@@ -50,7 +51,15 @@
 				}
 			}
 		}
-		]
+		],
+    ["OS=='linux'",
+      {
+        "libraries": [
+          "../../src/libs/linux-release/libutils.a",
+          "../../src/libs/linux-release/libimage.a"
+        ]
+      }
+    ]
 		]
 	}],
 }

@@ -58,9 +58,9 @@ public:
 	}
 
 private:
+  Napi::Promise::Deferred deferred_;
 	std::string in_filename_;
   image::Image* img_ = nullptr;
 	std::string out_filename_;
 	image::ImgFormat format_;
-	Napi::Promise::Deferred deferred_;
 };

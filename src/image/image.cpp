@@ -538,7 +538,7 @@ int Image::DecodeGif(std::string filename) {
           auto curr_pic = racing_webp % 2 == 0 ? &pic_even : &pic_odd;
           curr_pic->argb = reinterpret_cast<uint32_t*>(images[racing_webp].get());
           if (!WebPEncode(&config, curr_pic)) {
-            std::cout << "Error on frame " << racing_webp << " with data address: " << (int)(curr_pic->argb) << std::endl;
+            std::cout << "Error on frame " << racing_webp << " with data address: " << reinterpret_cast<uint64_t>(curr_pic->argb) << std::endl;
           }
           webppics_statuses[racing_webp] = ImageStatus::FINISHED;
           racing_webp++;

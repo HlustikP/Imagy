@@ -44,6 +44,9 @@ SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/src/libs/${PRESET}")
 add_library(utils STATIC)
 add_library(image STATIC)
 
+#set_target_properties(utils PROPERTIES PREFIX "")
+#set_target_properties(image PROPERTIES PREFIX "")
+
 include_directories(${PROJECT_SOURCE_DIR}/src/headers)
 
 add_subdirectory(utils)
@@ -66,11 +69,11 @@ if(WIN32)
 				${libwebp_dir}/libwebpdemux.lib
     )
 endif()
-message(libjpeg-turbo)
+
 if(UNIX)
     target_link_libraries(imagy_test ZLIB::ZLIB
         ${PNG_LIBRARY}
-        libjpeg-turbo
+        "/opt/libjpeg-turbo/lib64/libjpeg.so"
         ${WEBP_LIBRARY}
         ${WEBP_DEMUX_LIBRARY}
         ${WEBP_MUX_LIBRARY}

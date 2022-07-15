@@ -3,6 +3,7 @@
 #include "encode.h"
 
 #include <chrono>
+#include <boost/gil/extension/io/jpeg.hpp>
 
 namespace gil = boost::gil;
 
@@ -107,11 +108,29 @@ int main(int argc, const char* argv[]) {
   auto diff = std::chrono::duration_cast <std::chrono::milliseconds> (end - start).count();
 
   //testAnimWebp();
-  std::string input = "test\\vanilla.gif";
-  std::string output = "vanilla.webp";
+  std::string input = "test/cat.jpg";
+  std::string output = "Cat.jpg";
 
-  image::Image img_rgb8_gif_to_webp(input);
-  img_rgb8_gif_to_webp.WriteImgToFile(output, image::WEBP);
+  boost::gil::rgb8_image_t img;
+
+  try {
+    auto infos = gil::read_image_info(input, gil::jpeg_tag());
+    gil::read_image(input, img, gil::jpeg_tag());
+    gil::write_view(output, boost::gil::const_view(img), gil::jpeg_tag());
+  } catch (std::exception& e) {
+    std::cout << "Error:" << e.what() << std::endl;
+  }
+
+  try {
+    image::Image test_img(input);
+  }
+  catch (std::exception& e) {
+    std::cout << "Error:" << e.what() << std::endl;
+  }
+
+
+  //image::Image img_rgb8_gif_to_webp(input);
+  //img_rgb8_gif_to_webp.WriteImgToFile(output, image::JPEG);
 
   std::cout << "Done" << std::endl;
 

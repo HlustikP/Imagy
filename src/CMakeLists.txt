@@ -73,7 +73,7 @@ endif()
 if(UNIX)
     target_link_libraries(imagy_test ZLIB::ZLIB
         ${PNG_LIBRARY}
-        "/opt/libjpeg-turbo/lib64/libjpeg.so"
+        "/opt/libjpeg-turbo/lib64/libjpeg.a"
         ${WEBP_LIBRARY}
         ${WEBP_DEMUX_LIBRARY}
         ${WEBP_MUX_LIBRARY}

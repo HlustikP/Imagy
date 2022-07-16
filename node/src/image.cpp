@@ -37,7 +37,7 @@ Image::~Image() {
 
 Napi::Value Image::WriteToFile(const Napi::CallbackInfo& info) {
   std::string out_file;
-  image::ImgFormat format;
+  cpp_image::ImgFormat format;
 
   auto env = info.Env();
   auto deferred = Napi::Promise::Deferred::New(env);
@@ -57,7 +57,7 @@ Napi::Value Image::WriteToFile(const Napi::CallbackInfo& info) {
 
 void Image::WriteToFileSync(const Napi::CallbackInfo& info) {
   std::string out_file;
-  image::ImgFormat format;
+  cpp_image::ImgFormat format;
 
   if (!GetOutInfos(info, &out_file, &format)) {
     Napi::Error::New(info.Env(), "Cannot infer file format from output file string").ThrowAsJavaScriptException();
@@ -127,9 +127,9 @@ Napi::Value Image::Algorithm(const Napi::CallbackInfo& info) {
   return Algorithm;
 }
 
-bool Image::GetOutInfos(const Napi::CallbackInfo& info, std::string* filename, image::ImgFormat* format) {
+bool Image::GetOutInfos(const Napi::CallbackInfo& info, std::string* filename, cpp_image::ImgFormat* format) {
   *filename = std::string(info[0].As<Napi::String>());;
-  *format = image::Image::GetFileExtension(*filename);
+  *format = cpp_image::Image::GetFileExtension(*filename);
 
-  return !(*format == image::ImgFormat::INVALID);
+  return !(*format == cpp_image::ImgFormat::INVALID);
 }

@@ -1,6 +1,6 @@
-#include "image.h"
+#include "imagy.h"
 
-namespace image
+namespace imagy
 {
 
 Image::Image(std::string& filename) {

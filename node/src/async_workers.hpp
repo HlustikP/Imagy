@@ -1,16 +1,16 @@
 #pragma once
 
 #include <napi.h>
-#include <image.h>
+#include <imagy.h>
 
 // Implementation of the Napi::AsyncWorker abstract class for the image conversion function
 class ConversionWorker : public Napi::AsyncWorker {
 public:
-	ConversionWorker(Napi::Env& env, std::string in_filename, std::string out_filename, image::ImgFormat format)
+	ConversionWorker(Napi::Env& env, std::string in_filename, std::string out_filename, imagy::ImgFormat format)
 		: Napi::AsyncWorker(env), deferred_(Napi::Promise::Deferred::New(env)), in_filename_(in_filename), out_filename_(out_filename), format_(format) {
 	}
 
-  ConversionWorker(Napi::Env& env, image::Image* img, std::string out_filename, image::ImgFormat format)
+  ConversionWorker(Napi::Env& env, imagy::Image* img, std::string out_filename, imagy::ImgFormat format)
     : Napi::AsyncWorker(env), deferred_(Napi::Promise::Deferred::New(env)), img_(img), out_filename_(out_filename), format_(format) {
   }
 
@@ -18,7 +18,7 @@ public:
 
 	// Executed inside a new thread
 	void Execute() {
-    auto img = img_ == nullptr ? new image::Image(in_filename_) : img_;
+    auto img = img_ == nullptr ? new imagy::Image(in_filename_) : img_;
 		const auto result = img->WriteImgToFile(out_filename_, format_);
 
     if (img_ == nullptr) {
@@ -60,7 +60,7 @@ public:
 private:
   Napi::Promise::Deferred deferred_;
 	std::string in_filename_;
-  image::Image* img_ = nullptr;
+  imagy::Image* img_ = nullptr;
 	std::string out_filename_;
-	image::ImgFormat format_;
+	imagy::ImgFormat format_;
 };

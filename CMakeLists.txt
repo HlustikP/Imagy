@@ -1,7 +1,29 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 set(CMAKE_CXX_STANDARD 17)
 
 project(imagy_test)
+
+if(WIN32)
+    set(gtest_force_shared_crt)
+    include(FetchContent)
+    FetchContent_Declare(
+      googletest
+      GIT_REPOSITORY https://github.com/google/googletest.git
+      GIT_TAG release-1.12.1
+    )
+
+    FetchContent_MakeAvailable(googletest)
+endif()
+
+set(CompilerFlags
+        CMAKE_CXX_FLAGS
+        CMAKE_CXX_FLAGS_RELEASE
+        CMAKE_C_FLAGS
+        CMAKE_C_FLAGS_RELEASE
+        )
+foreach(CompilerFlag ${CompilerFlags})
+  string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
+endforeach()
 
 if(MSVC)
     #set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -24,7 +46,6 @@ if(UNIX)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
-execute_process(COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/test.sh
-				WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
 add_subdirectory(src)
+
+add_subdirectory(tests)

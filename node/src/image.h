@@ -1,10 +1,10 @@
 #pragma once
 
 #include <napi.h>
-#include <image.h>
+#include <imagy.h>
 #include "async_workers.hpp"
 
-namespace cpp_image = image;
+namespace cpp_image = imagy;
 
 class Image : public Napi::ObjectWrap<Image> {
 public:
@@ -19,7 +19,7 @@ private:
   Napi::Value RescaleSync(const Napi::CallbackInfo& info);
 
   // filename and format are out parameters, returns false on error
-  static bool GetOutInfos(const Napi::CallbackInfo& info, std::string* filename, image::ImgFormat* format);
+  static bool GetOutInfos(const Napi::CallbackInfo& info, std::string* filename, cpp_image::ImgFormat* format);
   // will act as an enum
   cpp_image::Image* img_;
 };

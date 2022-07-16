@@ -26,12 +26,12 @@ Napi::Object Convert(const Napi::CallbackInfo& info) {
 		return Napi::Object::New(env);
 	}
 
-	image::ImgFormat format;
+	imagy::ImgFormat format;
 
 	if (image_infos.Has("outName")) {
 		out_filename = std::string(image_infos.Get("outName").As<Napi::String>());
-		format = image::Image::GetFileExtension(out_filename);
-		if (format == image::ImgFormat::INVALID) {
+		format = imagy::Image::GetFileExtension(out_filename);
+		if (format == imagy::ImgFormat::INVALID) {
 			Napi::Error::New(env, "Cannot infer file format from outName extension").ThrowAsJavaScriptException();
 			return Napi::Object::New(env);
 		}
@@ -40,7 +40,7 @@ Napi::Object Convert(const Napi::CallbackInfo& info) {
 		return Napi::Object::New(env);
 	}
 
-  image::Image img(in_filename);
+  imagy::Image img(in_filename);
   const auto result = img.WriteImgToFile(out_filename, format);
 
 	image_infos.Set("finished", true);
@@ -92,12 +92,12 @@ Napi::Promise ConvertAsync(const Napi::CallbackInfo& info) {
 		return deferred.Promise();
 	}
 
-	image::ImgFormat format;
+	imagy::ImgFormat format;
 
 	if (image_infos.Has("outName")) {
 		out_filename = std::string(image_infos.Get("outName").As<Napi::String>());
-		format = image::Image::GetFileExtension(out_filename);
-		if (format == image::ImgFormat::INVALID) {
+		format = imagy::Image::GetFileExtension(out_filename);
+		if (format == imagy::ImgFormat::INVALID) {
 			Napi::Error::New(env, "Cannot infer file format from outName extension").ThrowAsJavaScriptException();
 			deferred.Reject(Napi::Number::New(env, 0));
 			return deferred.Promise();

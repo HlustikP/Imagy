@@ -61,13 +61,16 @@ target_link_libraries(imagy_test
 			)
 
 if(WIN32)
-    target_link_libraries(imagy_test ${zlib_dir}/zlib.lib
+    set(WIN_LIBS ${zlib_dir}/zlib.lib
         ${libpng_dir}/libpng16.lib
         ${jpeglib_dir}/jpeg.lib
         ${libwebp_dir}/libwebp.lib
 				${libwebp_dir}/libwebpmux.lib
 				${libwebp_dir}/libwebpdemux.lib
     )
+    set(WIN_LIBS ${WIN_LIBS} PARENT_SCOPE)
+
+    target_link_libraries(imagy_test ${WIN_LIBS})
 endif()
 
 if(UNIX)

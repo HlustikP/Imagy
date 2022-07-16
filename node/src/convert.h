@@ -1,7 +1,7 @@
 #pragma once
 
 #include <napi.h>
-#include <image.h>
+#include <imagy.h>
 
 #include "async_workers.hpp"
 

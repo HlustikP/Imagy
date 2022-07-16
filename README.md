@@ -1,7 +1,6 @@
 Image conversion library with node binding
 
 ## Requirements
-
 Library Specifcs:
 - C++ 17 or higher
 - CMake Version 3.0+ (Though 3.6+ is advised)
@@ -28,10 +27,13 @@ WIP
 # Windows
 - Use the VS Dev Console for the c++ library and another shell for the binding.
 
-# Linux:
+# Linux
 - ZLIB: `sudo apt-get install zlib1g-dev`
 - libpng: `sudo apt install libpng-dev`
-- libjpeg: Follow build and install instructions https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/BUILDING.md
+- libjpeg: Follow the build and install instructions on https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/BUILDING.md
+
+## Usage
+WIP
 
 ## Troubleshooting
 - Problem: Compiling the c++ library succeeds but compiling the binding with `node-gyp`throws linker errors. 
@@ -39,6 +41,6 @@ WIP
 If that doesnt help, try running the `node-gyp` commands in sequence: `node-gyp configure` and `node-gyp build`.
 - Problem: I linked everything and every library has been found by cmake but it still throws linker errors on Linux.
 > Solution: Try executing `ninja` with root privileges
-## Attributions
 
+## Attributions
 All images used for unit testing have their source credited [HERE](ATTRIBUTIONS.md)

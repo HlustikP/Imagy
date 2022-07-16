@@ -22,7 +22,7 @@
 
 namespace gil = boost::gil;
 
-namespace image
+namespace imagy
 {
 
 enum ColorModel {

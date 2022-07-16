@@ -12,7 +12,6 @@ int main(int argc, const char* argv[]) {
   auto end = std::chrono::system_clock::now();
   auto diff = std::chrono::duration_cast <std::chrono::milliseconds> (end - start).count();
 
-  //testAnimWebp();
   std::string input = "test/cat.jpg";
   std::string output = "Cat.jpg";
 

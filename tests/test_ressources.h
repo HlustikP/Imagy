@@ -16,18 +16,18 @@ const struct fileio {
 const struct jpeg {
   inline static std::string test_file = "../../../node/media/cat.jpg";
   inline static std::string target_file = "../../../node/media_output/cat.jpg";
-  inline static std::string target_hash = "ebb9977689f4215cea72b4373c2d2b80c21bf17fa30228f9fb9e14f77ca06441";
+  inline static std::string target_hash = "c5fcd03872f66d4d361f2da9241410e17224321ce563c88b355141b2d3030a07";
 };
 
 const struct bmp {
   inline static std::string test_file = "../../../node/media/cat.bmp";
   inline static std::string target_file = "../../../node/media_output/cat.bmp";
-  inline static std::string target_hash = "06242e907d5f1f526ca2a092256baf4ba9a82deb42ecc4d740d89b9f4d0a2260";
+  inline static std::string target_hash = "cf776623e3bd2da2af8f86ad5195a263ec54336e8cafe1194f3f11e285b1208b";
 };
 
 const struct png {
   inline static std::string test_file = "../../../node/media/cat.png";
   inline static std::string target_file = "../../../node/media_output/cat.png";
-  inline static std::string target_hash = "e6c9ab5f95cc86ff74304301c4bda5abfe48743516f38f690f65bc7d26fa9c9d";
+  inline static std::string target_hash = "6c18ae9a2cf06365304d246f09be7389406dbaa09d84199d5fa0786f9375a67c";
 };
 }

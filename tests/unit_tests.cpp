@@ -34,32 +34,32 @@ TEST(Utils, FileIO) {
   EXPECT_EQ(test_string, test::fileio::target_hash);
   delete[] data;
 }
-/*
+
 TEST(Image, Jpeg) {
   int length = 0;
   std::string file_content;
-  auto volatile format = imagy::ImgFormat::BMP;
-  //img.WriteImgToFile(test::jpeg::target_file, imagy::ImgFormat::JPEG);
-  //auto output_img_data = utils::FileIO::GetDataFromFile(test::jpeg::target_file, &length);
+  imagy::Image img(test::jpeg::test_file);
+  img.WriteImgToFile(test::jpeg::target_file, imagy::ImgFormat::JPEG);
+  auto output_img_data = utils::FileIO::GetDataFromFile(test::jpeg::target_file, &length);
 
-  //file_content.assign(output_img_data, length);
+  file_content.assign(output_img_data, length);
 
-  auto test_string = std::string("");// hashString(file_content);
+  auto test_string = hashString(file_content);
 
   EXPECT_EQ(test_string, test::jpeg::target_hash);
-  //delete[] output_img_data;
+  delete[] output_img_data;
 }
 
 TEST(Image, Bmp) {
   int length = 0;
   std::string file_content;
   imagy::Image img(test::bmp::test_file);
-  img.WriteImgToFile(test::bmp::target_file, imagy::ImgFormat::JPEG);
+  img.WriteImgToFile(test::bmp::target_file, imagy::ImgFormat::BMP);
   auto output_img_data = utils::FileIO::GetDataFromFile(test::bmp::target_file, &length);
 
   file_content.assign(output_img_data, length);
 
-  auto test_string = std::string("");// hashString(file_content);
+  auto test_string = hashString(file_content);
 
   EXPECT_EQ(test_string, test::bmp::target_hash);
   delete[] output_img_data;
@@ -69,14 +69,13 @@ TEST(Image, Png) {
   int length = 0;
   std::string file_content;
   imagy::Image img(test::png::test_file);
-  img.WriteImgToFile(test::png::target_file, imagy::ImgFormat::JPEG);
+  img.WriteImgToFile(test::png::target_file, imagy::ImgFormat::PNG);
   auto output_img_data = utils::FileIO::GetDataFromFile(test::png::target_file, &length);
 
   file_content.assign(output_img_data, length);
 
-  auto test_string = std::string("");// hashString(file_content);
+  auto test_string = hashString(file_content);
 
   EXPECT_EQ(test_string, test::png::target_hash);
   delete[] output_img_data;
 }
-*/

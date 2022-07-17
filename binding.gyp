@@ -55,8 +55,8 @@
     ["OS=='linux'",
       {
         "libraries": [
-          "../../src/libs/linux-release/libutils.a",
-          "../../src/libs/linux-release/libimage.a",
+          "../src/libs/linux-release/libutils.a",
+          "../src/libs/linux-release/libimage.a",
           "/opt/libjpeg-turbo/lib64/libjpeg.so",
           "/usr/local/lib/libwebp.so",
           "/usr/local/lib/libwebpmux.so",

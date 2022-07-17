@@ -4,7 +4,7 @@ Image conversion library with node binding
 Library Specifcs:
 - C++ 17 or higher
 - CMake Version 3.9+
-- Windows x64 (Linux compatibility is currently WIP)
+- Windows x64
 - A few libraries are needed, refer to the Installation reference [HERE](#installation)
 
 Node-Binding Specifics:

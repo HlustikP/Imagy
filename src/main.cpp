@@ -1,5 +1,4 @@
 /*
-* Copyright(c) 2022 Patrick Hlustik (patrick.hlustik@googlemail.com) 
 * This is just a scratch/test file for development and can safely be ignored.
 */
 

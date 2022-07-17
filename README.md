@@ -1,10 +1,46 @@
-Image conversion library with node binding
+Image conversion and manipulation library with node binding
 
-## Requirements
+## Usage
+This library comes with pre-built binaries. You can install the package with
+```
+npm i imagy
+```
+
+Inlude the package into your js application with:
+```js
+const imagy = require('imagy');
+```
+
+For quick image conversions the library implements the `convert` and `convertSync` functions:
+```js
+const imagy = require('imagy');
+
+imagy.convertSync('path/to/file.jpg', 'path/to/target.png');
+```
+```js
+const imagy = require('imagy');
+
+// Converts asynchronously and returns a promise
+await imagy.convert('path/to/file.jpg', 'path/to/target.png');
+```
+These functions take two string arguments. The first is the path to the file to be converted
+and the second is the target. The function infers the image type from the **file extension**,
+which is therefore needed. The `convert` function returns a promise that, if resolved, returns
+and Object with `finished`, `error` and `img` keys.
+
+### Supported Image Formats:
+- In all directions: BMP, PNG, JPEG, WEBP
+- In one direction only: GIF -> animated WEBP
+
+## Build Requirements
+This package has been built and tested on Windows 10 and Kali Linux 2021.4 x64 via WSL2.
+
 Library Specifcs:
 - C++ 17 or higher
+- Ninja Build System v1.11+
+- msvc (windows) or gcc (linux)
 - CMake Version 3.9+
-- Windows x64
+- Windows x64 or a debian-based Linux distro x64
 - A few libraries are needed, refer to the Installation reference [HERE](#installation)
 
 Node-Binding Specifics:
@@ -47,10 +83,7 @@ done via Google's GTest and can be triggered by going into the `tests` directory
 Note though that this is currently **Windows only**.
 
 The binding includes the Jest test framework and testing can be triggered after the build process via
-executing `npm test` or `npx jest` inside the `node` directory.
-
-## Usage
-WIP
+executing `npm test` or `npx jest` inside the root directory.
 
 ## Troubleshooting
 - Problem: Compiling the c++ library succeeds but compiling the binding with `node-gyp`throws linker errors. 

@@ -57,7 +57,7 @@ await img.writeToFile('another/image.bmp');
 **Note** though that this way the underlying image data are only freed once the `Image` instance
 gets garbage collected, which triggers the underlying cpp-class's destructor.
 
-Image objects also have access to the `rescale` and `rescaleSync` functions, which return the 
+Image objects also have access to the `rescale` and `rescaleSync` methods, which return the 
 calling object, so you might use them as follows:
 ```js
 const imagy = require('imagy');
@@ -66,7 +66,7 @@ img('path/to/input/file.png') = new imagy.Image;
 //          (HEIGHT, WIDTH)
 img.rescaleSync(0, 4000).writeToFileSync(targetFile);
 ```
-A `0` argument here indicates, that the dimension should be calculates in such a way that the image
+A `0` argument here indicates, that the dimension should be calculated in such a way that the image
 proportions are retained.
 
 ## Build Requirements

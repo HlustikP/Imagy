@@ -6,8 +6,8 @@ if (WIN32)
     add_custom_command(TARGET tests
                     PRE_LINK
                     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/build/${PRESET}/tests"
-                    COMMAND cp ../../bin/${PRESET}/libpng16.dll libpng16.dll
-                    COMMAND cp ../../bin/${PRESET}/zlib1.dll zlib1.dll)
+                    COMMAND cp ../../../bin/${PRESET}/libpng16.dll libpng16.dll
+                    COMMAND cp ../../../bin/${PRESET}/zlib1.dll zlib1.dll)
 
     #add_custom_command(TARGET tests
     #                POST_BUILD

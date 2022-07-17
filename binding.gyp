@@ -7,15 +7,15 @@
       'cflags_cc': [ '-std=gnu++17' ],
       'sources': [
         'src/binding/imagy.cpp',
-        'src/bindng/async_workers.hpp',
-        'src/bindng/convert.h',
+        'src/binding/async_workers.hpp',
+        'src/binding/convert.h',
         'src/binding/convert.cpp',
         'src/binding/image.cpp',
         'src/binding/image.h'
       ],
       'include_dirs': [
         "<!@(node -p \"require('node-addon-api').include\")",
-		    '../src/headers'
+		    'src/headers'
      ],
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
 	  'conditions': [ ["OS=='win'",
@@ -35,7 +35,7 @@
 			'configurations': {
 				'Release': {
           'library_dirs': [
-            '../src/libs/x64-release',
+            'src/libs/x64-release',
 			    ],
 					'msvs_settings': {
 						'VCCLCompilerTool': {

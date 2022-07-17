@@ -2,8 +2,7 @@
 cmake-build-debug/
 build/
 .vs/
-
-node/node_modules/
+node_modules/
 
 scratch.js
 

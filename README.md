@@ -15,11 +15,17 @@ Node-Binding Specifics:
 Note though that `node-gyp` needs at least `Python v3.7` to be installed.
 Windows: https://www.python.org/downloads/
 For Ubuntu systems:
+
 `sudo apt install software-properties-common -y`
+
 `sudo add-apt-repository ppa:deadsnakes/ppa -y`
+
 `sudo apt update`
+
 `sudo apt install python3.8 -y`
+
 Verify via `python3.8 --version`
+
 Easiest way to make it accessable to `node-gyp` is to setup a `PYTHON` environment variable to the path of the `Python` executable.
 
 ## Installation
@@ -31,6 +37,14 @@ WIP
 - ZLIB: `sudo apt-get install zlib1g-dev`
 - libpng: `sudo apt install libpng-dev`
 - libjpeg: Follow the build and install instructions on https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/BUILDING.md
+
+## Testing
+The project includes test suites for both the c++ library and the node binding. The c++ tests are 
+done via Google's GTest and can be triggered by going into the `tests` directory inside the build folder.
+Note though that this is currently **Windows only**.
+
+The binding includes the Jest test framework and testing can be triggered after the build process via
+executing `npm test` or `npx jest` inside the `node` directory.
 
 ## Usage
 WIP

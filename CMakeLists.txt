@@ -48,4 +48,6 @@ endif()
 
 add_subdirectory(src)
 
-add_subdirectory(tests)
+if(WIN32)
+    add_subdirectory(tests)
+endif()

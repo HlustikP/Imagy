@@ -2,11 +2,7 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "windows-base",
-            "hidden": true,
-            "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
-            "installDir": "${sourceDir}/install/${presetName}",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "cl.exe",
                 "CMAKE_CXX_COMPILER": "cl.exe",
@@ -16,7 +12,11 @@
                 "type": "equals",
                 "lhs": "${hostSystemName}",
                 "rhs": "Windows"
-            }
+            },
+            "generator": "Ninja",
+            "hidden": true,
+            "installDir": "${sourceDir}/install/${presetName}",
+            "name": "windows-base"
         },
         {
             "name": "x64-debug",
@@ -79,26 +79,26 @@
                 }
             }
         },
-		{
-        "name": "linux-release",
-        "displayName": "Linux Release",
-        "generator": "Ninja",
-        "binaryDir": "${sourceDir}/build/${presetName}",
-        "installDir": "${sourceDir}/install/${presetName}",
-        "cacheVariables": {
-            "CMAKE_BUILD_TYPE": "Release",
-            "PRESET": "${presetName}"
-        },
-        "condition": {
-            "type": "equals",
-            "lhs": "${hostSystemName}",
-            "rhs": "Linux"
-        },
-        "vendor": {
-            "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
-                "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
+        {
+            "name": "linux-release",
+            "displayName": "Linux Release",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "PRESET": "${presetName}"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
+                    "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
+                }
             }
         }
-    }
     ]
 }

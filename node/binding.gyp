@@ -27,7 +27,7 @@
 			    'libwebp',
 			    'libwebpmux',
 			    'libwebpdemux',
-			    'jpeg',
+			    'jpeg-static',
 			    'libpng16',
 			    'zlib'
 			  ],

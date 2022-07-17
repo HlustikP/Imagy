@@ -24,7 +24,7 @@ endfunction()
 if(WIN32)
     check_lib("ZLIB" "zlib_dir" "ZLIB_INCLUDE" "zlib" FALSE)
     check_lib("Boost" "boost_dir" "BOOST_ROOT" "boost" TRUE)
-    check_lib("JPEGLIB" "jpeglib_dir" "JPEGLIB_INCLUDE" "jpeg" FALSE)
+    check_lib("JPEGLIB" "jpeglib_dir" "JPEGLIB_INCLUDE" "jpeg-static" FALSE)
     check_lib("LIBPNG" "libpng_dir" "LIBPNG_INCLUDE" "libpng16" FALSE)
     check_lib("libwebp" "libwebp_dir" "LIBWEBP_INCLUDE" "libwebp" FALSE)
 endif()
@@ -63,7 +63,7 @@ target_link_libraries(imagy_test
 if(WIN32)
     set(WIN_LIBS ${zlib_dir}/zlib.lib
         ${libpng_dir}/libpng16.lib
-        ${jpeglib_dir}/jpeg.lib
+        "${jpeglib_dir}/jpeg-static.lib"
         ${libwebp_dir}/libwebp.lib
 				${libwebp_dir}/libwebpmux.lib
 				${libwebp_dir}/libwebpdemux.lib
@@ -76,7 +76,7 @@ endif()
 if(UNIX)
     target_link_libraries(imagy_test ZLIB::ZLIB
         ${PNG_LIBRARY}
-        "/opt/libjpeg-turbo/lib64/libjpeg.a"
+        "/opt/libjpeg-turbo/lib64/libjpeg.so"
         ${WEBP_LIBRARY}
         ${WEBP_DEMUX_LIBRARY}
         ${WEBP_MUX_LIBRARY}

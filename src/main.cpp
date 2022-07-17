@@ -25,12 +25,12 @@ int main(int argc, const char* argv[]) {
     std::cout << "Error:" << e.what() << std::endl;
   }
 
-  try {
+  /*try {
     imagy::Image test_img(input);
   }
   catch (std::exception& e) {
     std::cout << "Error:" << e.what() << std::endl;
-  }
+  }*/
 
   //imagy::Image img_rgb8_gif_to_webp(input);
   //img_rgb8_gif_to_webp.WriteImgToFile(output, image::JPEG);

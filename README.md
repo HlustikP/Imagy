@@ -1,5 +1,20 @@
 Image conversion and manipulation library with node binding
 
+## Features
+### Supported Image Formats:
+- In all directions: BMP, PNG, JPEG, WEBP
+- In one direction only: GIF -> animated WEBP
+### Image Manipulation:
+- Resizing (unanimated images only)
+
+Imagy is a library that uses a mixture of existing libraries (Boost::GIL, libpng, libjpeg, libwebp) and self-built decoders to provide
+an easy-to-use library interface for image conversion and manipulation. All images are internally
+stored as a (decoded) pixel array to allow fast operations on the data. De- and encoding are only
+ever done upon FileIO.
+
+Additionally, the en- and decoding routines for animated images makes use of multithreading to
+speed up the process.
+
 ## Usage
 This library comes with pre-built binaries. You can install the package with
 ```
@@ -26,11 +41,33 @@ await imagy.convert('path/to/file.jpg', 'path/to/target.png');
 These functions take two string arguments. The first is the path to the file to be converted
 and the second is the target. The function infers the image type from the **file extension**,
 which is therefore needed. The `convert` function returns a promise that, if resolved, returns
-and Object with `finished`, `error` and `img` keys.
+and Object with `finished`, `error` and `img`(path to target) keys.
 
-### Supported Image Formats:
-- In all directions: BMP, PNG, JPEG, WEBP
-- In one direction only: GIF -> animated WEBP
+You can also use the `Image` class:
+```js
+const imagy = require('imagy');
+
+img('path/to/input/file.png') = new imagy.Image;
+
+img.writeToFileSync('some/image.jpg');
+
+// async variant
+await img.writeToFile('another/image.bmp');
+```
+**Note** though that this way the underlying image data are only freed once the `Image` instance
+gets garbage collected, which triggers the underlying cpp-class's destructor.
+
+Image objects also have access to the `rescale` and `rescaleSync` functions, which return the 
+calling object, so you might use them as follows:
+```js
+const imagy = require('imagy');
+img('path/to/input/file.png') = new imagy.Image;
+
+//          (HEIGHT, WIDTH)
+img.rescaleSync(0, 4000).writeToFileSync(targetFile);
+```
+A `0` argument here indicates, that the dimension should be calculates in such a way that the image
+proportions are retained.
 
 ## Build Requirements
 This package has been built and tested on Windows 10 and Kali Linux 2021.4 x64 via WSL2.
@@ -91,6 +128,12 @@ executing `npm test` or `npx jest` inside the root directory.
 If that doesnt help, try running the `node-gyp` commands in sequence: `node-gyp configure` and `node-gyp build`.
 - Problem: I linked everything and every library has been found by cmake but it still throws linker errors on Linux.
 > Solution: Try executing `ninja` with root privileges
+
+## TODO:
+- Expand the README
+- Implement more image manipulation options
+- Support more formats
+- Expose the libweb configs api to enable finetuning of animated images
 
 ## Attributions
 All images used for unit testing have their source credited [HERE](ATTRIBUTIONS.md)

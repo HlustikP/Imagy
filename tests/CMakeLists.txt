@@ -1,13 +1,13 @@
 if (WIN32)
     enable_testing()
 
-    add_executable(tests unit_tests.cpp "SHA256.h" "SHA256.cpp" "test_ressources.h")
+    add_executable(tests cpp/unit_tests.cpp "cpp/SHA256.h" "cpp/SHA256.cpp" "cpp/test_ressources.h")
 
     add_custom_command(TARGET tests
                     PRE_LINK
                     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/build/${PRESET}/tests"
-                    COMMAND cp ../../../node/bin/${PRESET}/libpng16.dll libpng16.dll
-                    COMMAND cp ../../../node/bin/${PRESET}/zlib1.dll zlib1.dll)
+                    COMMAND cp ../../bin/${PRESET}/libpng16.dll libpng16.dll
+                    COMMAND cp ../../bin/${PRESET}/zlib1.dll zlib1.dll)
 
     #add_custom_command(TARGET tests
     #                POST_BUILD

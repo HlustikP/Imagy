@@ -3,7 +3,7 @@ Image conversion library with node binding
 ## Requirements
 Library Specifcs:
 - C++ 17 or higher
-- CMake Version 3.0+ (Though 3.6+ is advised)
+- CMake Version 3.9+
 - Windows x64 (Linux compatibility is currently WIP)
 - A few libraries are needed, refer to the Installation reference [HERE](#installation)
 
@@ -32,6 +32,9 @@ Easiest way to make it accessable to `node-gyp` is to setup a `PYTHON` environme
 WIP
 # Windows
 - Use the VS Dev Console for the c++ library and another shell for the binding.
+- Download, compile and install the following libraries: `Boost Header-only`,
+`libpng`, `libjpeg-turbo`, `libwebp` and `zlib`. Header files should be copied into the
+`src/headers` directory, the compiled libraries into the `src/libs/PRESET` one.
 
 # Linux
 - ZLIB: `sudo apt-get install zlib1g-dev`

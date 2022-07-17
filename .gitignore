@@ -1,5 +1,11 @@
-bin/
 .idea/
 cmake-build-debug/
 build/
 .vs/
+
+node/node_modules/
+
+scratch.js
+
+tests/media_output/*
+!tests/media_output/.gitkeep

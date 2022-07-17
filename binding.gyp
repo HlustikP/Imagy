@@ -6,12 +6,12 @@
       'cflags_cc!': [ '-fno-exceptions' ],
       'cflags_cc': [ '-std=gnu++17' ],
       'sources': [
-        'src/imagy.cpp',
-        'src/async_workers.hpp',
-        'src/convert.h',
-        'src/convert.cpp',
-        'src/image.cpp',
-        'src/image.h'
+        'src/binding/imagy.cpp',
+        'src/bindng/async_workers.hpp',
+        'src/bindng/convert.h',
+        'src/binding/convert.cpp',
+        'src/binding/image.cpp',
+        'src/binding/image.h'
       ],
       'include_dirs': [
         "<!@(node -p \"require('node-addon-api').include\")",

@@ -30,16 +30,22 @@ For quick image conversions the library implements the `convert` and `convertSyn
 ```js
 const imagy = require('imagy');
 
-imagy.convertSync('path/to/file.jpg', 'path/to/target.png');
+imagy.convertSync({
+            'image': 'path/to/file.jpg',
+            'outName': 'path/to/target.png',
+        });
 ```
 ```js
 const imagy = require('imagy');
 
 // Converts asynchronously and returns a promise
-await imagy.convert('path/to/file.jpg', 'path/to/target.png');
+await imagy.convert({
+            'image': 'path/to/file.jpg',
+            'outName': 'path/to/target.png',
+        });
 ```
-These functions take two string arguments. The first is the path to the file to be converted
-and the second is the target. The function infers the image type from the **file extension**,
+These functions take an Object with two properties as an argument. The first `image` is the path to the file to be converted
+and the second `outName` is the target. The function infers the image type from the **file extension**,
 which is therefore needed. The `convert` function returns a promise that, if resolved, returns
 and Object with `finished`, `error` and `img`(path to target) keys.
 
@@ -47,7 +53,7 @@ You can also use the `Image` class:
 ```js
 const imagy = require('imagy');
 
-img('path/to/input/file.png') = new imagy.Image;
+img = new imagy.Image('path/to/input/file.png');
 
 img.writeToFileSync('some/image.jpg');
 
@@ -61,7 +67,7 @@ Image objects also have access to the `rescale` and `rescaleSync` methods, which
 calling object, so you might use them as follows:
 ```js
 const imagy = require('imagy');
-img('path/to/input/file.png') = new imagy.Image;
+img = new imagy.Image('path/to/input/file.png');
 
 //          (HEIGHT, WIDTH)
 img.rescaleSync(0, 4000).writeToFileSync(targetFile);

@@ -17,7 +17,6 @@
     },
     "scripts": {
 		"install": "node-gyp-build",
-        "postinstall": "npm test",
         "test": "jest --runInBand --no-cache"
     },
     "gypfile": true,

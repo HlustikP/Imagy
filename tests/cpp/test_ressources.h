@@ -22,7 +22,7 @@ const struct jpeg {
 const struct bmp {
   inline static std::string test_file = "../../../tests/media/cat.bmp";
   inline static std::string target_file = "../../../tests/media_output/cat.bmp";
-  inline static std::string target_hash = "cf776623e3bd2da2af8f86ad5195a263ec54336e8cafe1194f3f11e285b1208b";
+  inline static std::string target_hash = "145eba200a44556f626ba4cbf60c4218dedbe44ef66573beb30532f19024ecd9";
 };
 
 const struct png {

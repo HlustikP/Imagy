@@ -1,6 +1,6 @@
 {
     "name": "imagy",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "description": "Node.js binding for the Imagy c++ library",
     "main": "index.js",
     "bugs": "https://github.com/HlustikP/Imagy/issues",

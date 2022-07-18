@@ -53,7 +53,7 @@ You can also use the `Image` class:
 ```js
 const imagy = require('imagy');
 
-img = new imagy.Image('path/to/input/file.png');
+const img = new imagy.Image('path/to/input/file.png');
 
 img.writeToFileSync('some/image.jpg');
 
@@ -67,7 +67,7 @@ Image objects also have access to the `rescale` and `rescaleSync` methods, which
 calling object, so you might use them as follows:
 ```js
 const imagy = require('imagy');
-img = new imagy.Image('path/to/input/file.png');
+const img = new imagy.Image('path/to/input/file.png');
 
 //          (HEIGHT, WIDTH)
 img.rescaleSync(0, 4000).writeToFileSync(targetFile);

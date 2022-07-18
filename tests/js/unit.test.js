@@ -4,7 +4,7 @@ import {readFileSync} from 'fs';
 
 import {tests} from './test_ressources';
 
-const imagy = bindings('imagy');
+const imagy = require('../../index.js');
 
 const hash_algorithm = 'sha256';
 const digest = 'hex';

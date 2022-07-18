@@ -1,6 +1,6 @@
 {
     "name": "imagy",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Node.js binding for the Imagy c++ library",
     "type": "module",
     "main": "index.js",
@@ -12,9 +12,11 @@
     },
     "dependencies": {
         "bindings": "^1.5.0",
-        "node-addon-api": "^5.0.0"
+        "node-addon-api": "^5.0.0",
+        "node-gyp-build": "^4.5.0"
     },
     "scripts": {
+		"install": "node-gyp-build",
         "postinstall": "npm test",
         "test": "jest --runInBand --no-cache"
     },

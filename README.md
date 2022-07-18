@@ -88,7 +88,7 @@ Library Specifcs:
 
 Node-Binding Specifics:
 - npm 8.0+
-- Node v16.0+
+- Node v14.0+
 - node-gyp v9.0+
 `$ npm install -g node-gyp`
 Note though that `node-gyp` needs at least `Python v3.7` to be installed.

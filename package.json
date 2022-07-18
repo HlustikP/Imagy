@@ -1,7 +1,8 @@
 {
     "name": "imagy",
-    "version": "0.2.4",
+    "version": "0.2.5",
     "description": "Node.js binding for the Imagy c++ library",
+    "author": "Patrick Hlustik",
     "main": "index.js",
     "bugs": "https://github.com/HlustikP/Imagy/issues",
     "homepage": "https://github.com/HlustikP/Imagy",
@@ -9,11 +10,19 @@
         "type": "git",
         "url": "https://github.com/HlustikP/Imagy"
     },
+    "keywords": [
+        "pictures",
+        "image",
+        "image processing",
+        "image manipulation",
+        "webp"
+    ],
     "dependencies": {
         "bindings": "^1.5.0",
         "node-addon-api": "^5.0.0",
         "node-gyp-build": "^4.5.0"
     },
+    "license":  "MIT",
     "scripts": {
 		"install": "node-gyp-build",
         "test": "jest --runInBand --no-cache"

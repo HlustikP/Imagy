@@ -16,8 +16,8 @@ int main(int argc, const char* argv[]) {
   auto end = std::chrono::system_clock::now();
   auto diff = std::chrono::duration_cast <std::chrono::milliseconds> (end - start).count();
 
-  std::string input = "test/cat.jpg";
-  std::string output = "Cat.jpg";
+  std::string input = "cat.jpg";
+  std::string output = "cat_out.jpg";
 
   boost::gil::rgb8_image_t img;
 
@@ -29,12 +29,14 @@ int main(int argc, const char* argv[]) {
     std::cout << "Error:" << e.what() << std::endl;
   }
 
-  /*try {
+  try {
     imagy::Image test_img(input);
+    test_img.FlipH();
+    test_img.WriteImgToFile(output, imagy::ImgFormat::JPEG);
   }
   catch (std::exception& e) {
     std::cout << "Error:" << e.what() << std::endl;
-  }*/
+  }
 
   //imagy::Image img_rgb8_gif_to_webp(input);
   //img_rgb8_gif_to_webp.WriteImgToFile(output, image::JPEG);

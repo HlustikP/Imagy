@@ -12,7 +12,7 @@ an easy-to-use library interface for image conversion and manipulation. All imag
 stored as a (decoded) pixel array to allow fast operations on the data. De- and encoding are only
 ever done upon FileIO.
 
-Additionally, the en- and decoding routines for animated images makes use of multithreading to
+Additionally, the en- and decoding routines for animated images make use of multithreading to
 speed up the process.
 
 ## Usage
@@ -74,6 +74,8 @@ img.rescaleSync(0, 4000).writeToFileSync(targetFile);
 ```
 A `0` argument here indicates, that the dimension should be calculated in such a way that the image
 proportions are retained.
+
+See the [the according doc file](docs/BINDING.md) for a full documentation.
 
 ## Build Requirements
 This package has been built and tested on Windows 10 and Kali Linux 2021.4 x64 via WSL2.

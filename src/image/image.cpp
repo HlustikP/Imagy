@@ -106,8 +106,6 @@ int Image::FlipD() {
   auto forward_itr = &(data_[0]);
   auto backward_itr = &(data_[0]) + size_ - 1;
 
-  auto i = 0;
-
   if (!alpha_) {
     while (forward_itr < backward_itr) {
       std::swap(*forward_itr, *(backward_itr - 2));
@@ -134,11 +132,64 @@ int Image::FlipD() {
 
 int Image::FlipV() {
   // TODO: Handle animated images
+  if (width_ < 2) {
+    return 0;
+  }
+
+  const uint64_t pixel_size = alpha_ ? 4 : 3;
+  const uint64_t line_size = pixel_size * width_;
+  auto left_itr = &(data_[0]);
+  auto right_itr = &(data_[0]) + line_size - 1;
+
+  for (auto line = 0; line < height_; line++) {
+    // reset iterators to the line edges of the next line
+    left_itr = &(data_[0]) + line * line_size;
+    right_itr = &(data_[0]) + line * line_size + line_size - pixel_size;
+
+    while (left_itr < right_itr) {
+      std::swap(*left_itr, *right_itr);
+      std::swap(*(left_itr + 1), *(right_itr + 1));
+      std::swap(*(left_itr + 2), *(right_itr + 2));
+
+      if (alpha_) {
+        std::swap(*(left_itr + 3), *(right_itr + 3));
+      }
+
+      left_itr += pixel_size;
+      right_itr -= pixel_size;
+    }
+  }
+
   return 0;
 }
 
 int Image::FlipH() {
   // TODO: Handle animated images
+  if (height_ < 2) {
+    return 0;
+  }
+
+  const uint64_t pixel_size = alpha_ ? 4 : 3;
+  const uint64_t line_size = pixel_size * width_;
+  auto top_itr = &(data_[0]);
+  auto bottom_itr = &(data_[0]) + size_ - line_size;
+
+  // bottom in relation to the image position, not memory position
+  while (bottom_itr > top_itr) {
+    for (auto i = 0; i < width_; top_itr += pixel_size, bottom_itr += pixel_size, i++) {
+      std::swap(*top_itr, *bottom_itr);
+      std::swap(*(top_itr + 1), *(bottom_itr + 1));
+      std::swap(*(top_itr + 2), *(bottom_itr + 2));
+
+      if (alpha_) {
+        std::swap(*(top_itr + 3), *(bottom_itr + 3));
+      }
+    }
+
+    // move bottom_itr to the beginning of the line above
+    bottom_itr -= line_size * 2;
+  }
+
   return 0;
 }
 

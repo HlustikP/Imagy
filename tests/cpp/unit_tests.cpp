@@ -79,3 +79,51 @@ TEST(Image, Png) {
   EXPECT_EQ(test_string, test::png::target_hash);
   delete[] output_img_data;
 }
+
+TEST(Manipulation, FlipD) {
+  int length = 0;
+  std::string file_content;
+  imagy::Image img(test::jpeg::test_file);
+  img.FlipD();
+  img.WriteImgToFile((std::string)"./flipped_cat_d.jpg", imagy::ImgFormat::JPEG);
+  auto output_img_data = utils::FileIO::GetDataFromFile(test::jpeg::target_file, &length);
+
+  file_content.assign(output_img_data, length);
+
+  auto test_string = hashString(file_content);
+
+  EXPECT_EQ(test_string, test::jpeg::target_hash);
+  delete[] output_img_data;
+}
+
+TEST(Manipulation, FlipH) {
+  int length = 0;
+  std::string file_content;
+  imagy::Image img(test::jpeg::test_file);
+  img.FlipH();
+  img.WriteImgToFile((std::string)"./flipped_cat_h.jpg", imagy::ImgFormat::JPEG);
+  auto output_img_data = utils::FileIO::GetDataFromFile(test::jpeg::target_file, &length);
+
+  file_content.assign(output_img_data, length);
+
+  auto test_string = hashString(file_content);
+
+  EXPECT_EQ(test_string, test::jpeg::target_hash);
+  delete[] output_img_data;
+}
+
+TEST(Manipulation, FlipV) {
+  int length = 0;
+  std::string file_content;
+  imagy::Image img(test::jpeg::test_file);
+  img.FlipV();
+  img.WriteImgToFile((std::string)"./flipped_cat_v.jpg", imagy::ImgFormat::JPEG);
+  auto output_img_data = utils::FileIO::GetDataFromFile(test::jpeg::target_file, &length);
+
+  file_content.assign(output_img_data, length);
+
+  auto test_string = hashString(file_content);
+
+  EXPECT_EQ(test_string, test::jpeg::target_hash);
+  delete[] output_img_data;
+}

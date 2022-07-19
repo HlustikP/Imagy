@@ -30,4 +30,23 @@ const struct png {
   inline static std::string target_file = "../../../tests/media_output/cat.png";
   inline static std::string target_hash = "6c18ae9a2cf06365304d246f09be7389406dbaa09d84199d5fa0786f9375a67c";
 };
+
+const struct flip_d {
+  inline static std::string test_file = "../../../tests/media/cat.jpg";
+  inline static std::string target_file = "../../../tests/media_output/flipped_cat_d.jpg";
+  inline static std::string target_hash = "66d36ff192b7eea30f5d0725efba0e6f74e08a942d84de7453507d005727a211";
+};
+
+const struct flip_h {
+  inline static std::string test_file = "../../../tests/media/cat.jpg";
+  inline static std::string target_file = "../../../tests/media_output/flipped_cat_h.jpg";
+  inline static std::string target_hash = "3598e867e4afa5093a602d0f4ce721ff9626fa391a46b0ad47b121722dfec1f1";
+};
+
+const struct flip_v {
+  inline static std::string test_file = "../../../tests/media/cat.jpg";
+  inline static std::string target_file = "../../../tests/media_output/flipped_cat_v.jpg";
+  inline static std::string target_hash = "f31fc7bfafba707dfffb814f3aeaa36de99ca9b10916fc005599987e9591df30";
+};
+
 }

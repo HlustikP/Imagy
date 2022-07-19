@@ -83,47 +83,47 @@ TEST(Image, Png) {
 TEST(Manipulation, FlipD) {
   int length = 0;
   std::string file_content;
-  imagy::Image img(test::jpeg::test_file);
+  imagy::Image img(test::flip_d::test_file);
   img.FlipD();
-  img.WriteImgToFile((std::string)"./flipped_cat_d.jpg", imagy::ImgFormat::JPEG);
-  auto output_img_data = utils::FileIO::GetDataFromFile(test::jpeg::target_file, &length);
+  img.WriteImgToFile(test::flip_d::target_file, imagy::ImgFormat::JPEG);
+  auto output_img_data = utils::FileIO::GetDataFromFile(test::flip_d::target_file, &length);
 
   file_content.assign(output_img_data, length);
 
   auto test_string = hashString(file_content);
 
-  EXPECT_EQ(test_string, test::jpeg::target_hash);
+  EXPECT_EQ(test_string, test::flip_d::target_hash);
   delete[] output_img_data;
 }
 
 TEST(Manipulation, FlipH) {
   int length = 0;
   std::string file_content;
-  imagy::Image img(test::jpeg::test_file);
+  imagy::Image img(test::flip_h::test_file);
   img.FlipH();
-  img.WriteImgToFile((std::string)"./flipped_cat_h.jpg", imagy::ImgFormat::JPEG);
-  auto output_img_data = utils::FileIO::GetDataFromFile(test::jpeg::target_file, &length);
+  img.WriteImgToFile(test::flip_h::target_file, imagy::ImgFormat::JPEG);
+  auto output_img_data = utils::FileIO::GetDataFromFile(test::flip_h::target_file, &length);
 
   file_content.assign(output_img_data, length);
 
   auto test_string = hashString(file_content);
 
-  EXPECT_EQ(test_string, test::jpeg::target_hash);
+  EXPECT_EQ(test_string, test::flip_h::target_hash);
   delete[] output_img_data;
 }
 
 TEST(Manipulation, FlipV) {
   int length = 0;
   std::string file_content;
-  imagy::Image img(test::jpeg::test_file);
+  imagy::Image img(test::flip_v::test_file);
   img.FlipV();
-  img.WriteImgToFile((std::string)"./flipped_cat_v.jpg", imagy::ImgFormat::JPEG);
-  auto output_img_data = utils::FileIO::GetDataFromFile(test::jpeg::target_file, &length);
+  img.WriteImgToFile(test::flip_v::target_file, imagy::ImgFormat::JPEG);
+  auto output_img_data = utils::FileIO::GetDataFromFile(test::flip_v::target_file, &length);
 
   file_content.assign(output_img_data, length);
 
   auto test_string = hashString(file_content);
 
-  EXPECT_EQ(test_string, test::jpeg::target_hash);
+  EXPECT_EQ(test_string, test::flip_v::target_hash);
   delete[] output_img_data;
 }

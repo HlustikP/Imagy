@@ -6,6 +6,7 @@ Image conversion and manipulation library with node binding
 - In one direction only: GIF -> animated WEBP
 ### Image Manipulation:
 - Resizing (unanimated images only)
+- Flipping (unanimated images only)
 
 Imagy is a library that uses a mixture of existing libraries (Boost::GIL, libpng, libjpeg, libwebp) and self-built decoders to provide
 an easy-to-use library interface for image conversion and manipulation. All images are internally

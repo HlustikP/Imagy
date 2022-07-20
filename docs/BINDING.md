@@ -6,6 +6,7 @@
     1. [Construction](#construction)
     2. [Conversion](#conversion)
     3. [Resizing](#resizing)
+    4. [Flipping](#flipping)
 
 ## 1. Quick Conversion
 For quick image conversions the library implements the `convert` and `convertSync` functions:
@@ -71,7 +72,7 @@ await img.writeToFile('another/image.bmp');
 gets garbage collected, which triggers the underlying cpp-class's destructor.
 
 ### 2.3 Resizing
-Image objects also have access to the `rescale` and `rescaleSync` methods, which return the 
+Image objects also have access to the `rescale`(async) and `rescaleSync` methods, which return the 
 calling object, so you might use them as follows:
 ```js
 const imagy = require('imagy');
@@ -97,3 +98,31 @@ The `rescale` and `rescaleSync` methods take an optional third argument, which s
 member of the `Image.Algorithm` static Object.
 Bilinear interpolation (default) results in softer edges but is slower, whereas nearest-neighbour
 is very fast but leads to more artifacts.
+
+### 2.4 Flipping
+Images can also be flipped along the horizontal, vertical or diagonal (equivalent to a vertical +
+horizontal flip) axis:
+```js
+const imagy = require('imagy');
+const img = new imagy.Image('path/to/input/file.png');
+
+// diagonal
+img.flipDSync().writeToFileSync('targetfile.jpg');
+// vertical
+img.flipVSync().writeToFileSync('targetfile.jpg');
+// horizontal
+img.flipHSync().writeToFileSync('targetfile.jpg');
+```
+
+There is also the `flipSync` method that takes 1 argument, which is a one-letter-string:
+```js
+const imagy = require('imagy');
+const img = new imagy.Image('path/to/input/file.png');
+
+// diagonal
+img.flipSync('D').writeToFileSync('targetfile.jpg');
+// vertical
+img.flipSync('V').writeToFileSync('targetfile.jpg');
+// horizontal
+img.flipSync('H').writeToFileSync('targetfile.jpg');
+```

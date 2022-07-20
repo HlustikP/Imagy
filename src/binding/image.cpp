@@ -109,7 +109,7 @@ Napi::Value Image::RescaleSync(const Napi::CallbackInfo& info)
 
   if (info.Length() > 2) {
     if (!info[2].IsNumber()) {
-      Napi::TypeError::New(env, "Algorithm not found, use one from the Algorithm enum").ThrowAsJavaScriptException();
+      Napi::Error::New(env, "Algorithm not found, use one from the Algorithm enum").ThrowAsJavaScriptException();
       return Napi::Object::New(env);
     }
     algorithm = info[2].As<Napi::Number>();
@@ -128,19 +128,22 @@ Napi::Value Image::Rescale(const Napi::CallbackInfo& info) {
   auto deferred = Napi::Promise::Deferred::New(env);
 
   if (info.Length() < 2) {
-    Napi::TypeError::New(env, "Wrong number of arguments, needs at least height and witdh").ThrowAsJavaScriptException();
-    return Napi::Object::New(env);
+    auto error = Napi::TypeError::New(env, "Wrong number of arguments, needs at least height and witdh");
+    deferred.Reject(error.Value());
+    return deferred.Promise();
   }
 
   if (!info[0].IsNumber()) {
-    Napi::TypeError::New(env, "Wrong argument type, height must be of type Number").ThrowAsJavaScriptException();
-    return Napi::Object::New(env);
+    auto error = Napi::TypeError::New(env, "Wrong argument type, height must be of type Number");
+    deferred.Reject(error.Value());
+    return deferred.Promise();
   }
   auto height = info[0].As<Napi::Number>();
 
   if (!info[1].IsNumber()) {
-    Napi::TypeError::New(env, "Wrong argument type, width must be of type Number").ThrowAsJavaScriptException();
-    return Napi::Object::New(env);
+    auto error = Napi::TypeError::New(env, "Wrong argument type, width must be of type Number");
+    deferred.Reject(error.Value());
+    return deferred.Promise();
   }
   auto width = info[1].As<Napi::Number>();
 
@@ -149,13 +152,12 @@ Napi::Value Image::Rescale(const Napi::CallbackInfo& info) {
 
   if (info.Length() > 2) {
     if (!info[2].IsNumber()) {
-      Napi::TypeError::New(env, "Algorithm not found, use one from the Algorithm enum").ThrowAsJavaScriptException();
-      return Napi::Object::New(env);
+      auto error = Napi::Error::New(env, "Algorithm not found, use one from the Algorithm enum");
+      deferred.Reject(error.Value());
+      return deferred.Promise();
     }
     algorithm = info[2].As<Napi::Number>();
   }
-
-  auto info_ptr = &info;
 
   ResizingWorker* conversion_worker = new ResizingWorker(info.This(),
     env, 
@@ -173,8 +175,6 @@ Napi::Value Image::Rescale(const Napi::CallbackInfo& info) {
 
 Napi::Value Image::FlipDSync(const Napi::CallbackInfo& info)
 {
-  auto env = info.Env();
-
   img_->FlipD();
 
   return info.This();
@@ -182,8 +182,6 @@ Napi::Value Image::FlipDSync(const Napi::CallbackInfo& info)
 
 Napi::Value Image::FlipHSync(const Napi::CallbackInfo& info)
 {
-  auto env = info.Env();
-
   img_->FlipH();
 
   return info.This();
@@ -191,8 +189,6 @@ Napi::Value Image::FlipHSync(const Napi::CallbackInfo& info)
 
 Napi::Value Image::FlipVSync(const Napi::CallbackInfo& info)
 {
-  auto env = info.Env();
-
   img_->FlipV();
 
   return info.This();

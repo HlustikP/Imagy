@@ -173,4 +173,31 @@ describe('Test Image class', () => {
 
         expect(hashAndTest(targetFile, createHash(hash_algorithm), targetHash)).toBeTruthy();
     });
+
+    it('synchronously flips image diagonally', () => {
+        const [testFile, targetFile, targetHash] = getTestData(tests.imageProcessing.flipping.diagonal);
+        const img = new imagy.Image(testFile);
+
+        img.flipDSync().writeToFileSync(targetFile);
+
+        expect(hashAndTest(targetFile, createHash(hash_algorithm), targetHash)).toBeTruthy();
+    });
+
+    it('synchronously flips image along the horizontal axis', () => {
+        const [testFile, targetFile, targetHash] = getTestData(tests.imageProcessing.flipping.horizontal);
+        const img = new imagy.Image(testFile);
+
+        img.flipHSync().writeToFileSync(targetFile);
+
+        expect(hashAndTest(targetFile, createHash(hash_algorithm), targetHash)).toBeTruthy();
+    });
+
+    it('synchronously flips image along the vertical axis', () => {
+        const [testFile, targetFile, targetHash] = getTestData(tests.imageProcessing.flipping.vertical);
+        const img = new imagy.Image(testFile);
+
+        img.flipVSync().writeToFileSync(targetFile);
+
+        expect(hashAndTest(targetFile, createHash(hash_algorithm), targetHash)).toBeTruthy();
+    });
 });

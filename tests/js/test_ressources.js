@@ -56,6 +56,23 @@ const imageProcessing = {
             targetFile: resolve(__dirname, '../media_output/cat.jpg'),
             targetHash: 'ec18721518a4b58cedd98089f5f607ad652c9f6af2cec9d921c534e9d69d91e0',
         },
+    },
+    flipping: {
+        diagonal: {
+            testFile: resolve(__dirname, '../media/cat.jpg'),
+            targetFile: resolve(__dirname, '../media_output/cat.jpg'),
+            targetHash: '66d36ff192b7eea30f5d0725efba0e6f74e08a942d84de7453507d005727a211',
+        },
+        horizontal: {
+            testFile: resolve(__dirname, '../media/cat.jpg'),
+            targetFile: resolve(__dirname, '../media_output/cat.jpg'),
+            targetHash: '3598e867e4afa5093a602d0f4ce721ff9626fa391a46b0ad47b121722dfec1f1',
+        },
+        vertical: {
+            testFile: resolve(__dirname, '../media/cat.jpg'),
+            targetFile: resolve(__dirname, '../media_output/cat.jpg'),
+            targetHash: 'f31fc7bfafba707dfffb814f3aeaa36de99ca9b10916fc005599987e9591df30',
+        }
     }
 }
 

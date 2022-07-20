@@ -64,3 +64,40 @@ private:
 	std::string out_filename_;
 	imagy::ImgFormat format_;
 };
+
+// Implementation of the Napi::AsyncWorker abstract class for the image resizing function
+class ResizingWorker : public Napi::AsyncWorker {
+public:
+  ResizingWorker(Napi::Value callback, Napi::Env& env, imagy::Image* img, int height, int width, imagy::InterpolationAlgorithms algorithm)
+    : Napi::AsyncWorker(env), callback_(callback), deferred_(Napi::Promise::Deferred::New(env)), img_(img), height_(height), width_(width), algorithm_(algorithm) {
+  }
+
+  ~ResizingWorker() {}
+
+  // Executed inside a new thread
+  void Execute() {
+    img_->ChangeScale(height_, width_, algorithm_);
+  }
+
+  // Executed when the async work is completed, this function will be put into the main event loop
+  void OnOK() {
+    deferred_.Resolve(callback_.As<Napi::Object>());
+  }
+
+  // Same as above but executed when something inside Execute() throws an error via Napi::AsyncWorker::SetError or std::runtime_error
+  void OnError(Napi::Error const& error) {
+    deferred_.Reject(error.Value());
+  }
+
+  Napi::Promise GetPromise() {
+    return deferred_.Promise();
+  }
+
+private:
+  Napi::Value callback_;
+  Napi::Promise::Deferred deferred_;
+  imagy::Image* img_;
+  int height_;
+  int width_;
+  imagy::InterpolationAlgorithms algorithm_;
+};

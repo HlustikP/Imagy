@@ -6,12 +6,16 @@ namespace imagy
 Image::Image(std::string& filename) {
 	ImgFormat format = GetFileExtension(filename);
 
+  if (format == ImgFormat::INVALID) {
+    format = ParseHeader(filename);
+  }
+  std::cout << format << std::endl;
 	if(LoadImgData(filename, format) == 1) {
 		err_ = "Error while loading image data";
 	}	
 };
 
-Image::Image(std::vector<uint8_t> data, ColorModel) {
+Image::Image(uint8_t&& data, ColorModel model, int width) {
 };
  
 /*  Checks file extension of filename file against known ones
@@ -191,6 +195,32 @@ int Image::FlipH() {
   }
 
   return 0;
+}
+
+ImgFormat Image::ParseHeader(std::string& filename) {
+  auto const MAX_SIG_LENGTH = 11;
+
+  auto data = utils::FileIO::GetDataFromFile(filename, nullptr, 11);
+
+  for (auto& sig : img_signatures) {
+    auto sig_offset = std::get<1>(sig);
+    auto file_itr = data + sig_offset;
+
+    for (auto byte : std::get<0>(sig)) {
+      if (byte != *file_itr) {
+        break;
+      }
+
+      // Check if we've reached the last iteration
+      if (data + std::get<0>(sig).size() - 1 == file_itr) {
+        return std::get<2>(sig);
+      }
+
+      file_itr++;
+    }
+  }
+  delete[] data;
+  return ImgFormat::INVALID;
 }
 
 // TODO: Implement validation methods to filter out corrupt/forged images

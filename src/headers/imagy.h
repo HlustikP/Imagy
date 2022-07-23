@@ -57,15 +57,25 @@ enum InterpolationAlgorithms {
   BILINEAR
 };
 
-// Tuple types: Signature in ASCII, Offset of signature begin, corresponding file type
-inline std::vector<std::tuple<std::string, int, ImgFormat>> img_signatures {
-	std::tuple("GIF", 0, GIF)
+const static std::vector<uint8_t> GIF_SIG = { 0x47, 0x49, 0x46 };
+const static std::vector<uint8_t> JPEG_SIG = { 0xFF, 0xD8 };
+const static std::vector<uint8_t> PNG_SIG = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+const static std::vector<uint8_t> BMP_SIG = { 0x42, 0x4D };
+const static std::vector<uint8_t> WEBP_SIG = { 0x57, 0x45, 0x42, 0x50 };
+
+// Tuple types: File header/signature, Offset of signature begin, corresponding file type
+static inline std::vector<std::tuple<const std::vector<uint8_t>, int, ImgFormat>> img_signatures {
+  std::tuple(GIF_SIG, 0, GIF),
+	std::tuple(JPEG_SIG, 0, JPEG),
+	std::tuple(PNG_SIG, 0, PNG),
+	std::tuple(BMP_SIG, 0, BMP),
+	std::tuple(WEBP_SIG, 8, WEBP)
 };
 
 class Image {
 public:
   Image(std::string& filename);
-  Image(std::vector<uint8_t> data, ColorModel); // NOT YET IMPLEMENTED
+  Image(uint8_t&& data, ColorModel model, int width); // NOT YET IMPLEMENTED
 
   int WriteImgToFile(std::string& filename, ImgFormat format);
 	static ImgFormat GetFileExtension(std::string& filename);
@@ -74,6 +84,8 @@ public:
   int FlipD();
   int FlipV();
   int FlipH();
+
+  static ImgFormat ParseHeader(std::string& filename);
 
   int GetLength() const;
   int GetHeight() const;

@@ -10,7 +10,7 @@ FileIO::FileIO(std::string filename) {
     Writes size of data buffer into length int reference if provided
     Returns pointer to heap allocated char array containing the data 
 	and nullptr on error											*/
-char* FileIO::GetDataFromFile(const std::string& filename, int* length) {
+char* FileIO::GetDataFromFile(const std::string& filename, int* length, int read_size) {
 	std::ifstream input_file;
 	input_file.open(filename, std::ios::binary);
 
@@ -20,7 +20,7 @@ char* FileIO::GetDataFromFile(const std::string& filename, int* length) {
 	}
 
 	// get length of file:
-	input_file.seekg(0, input_file.end);
+  input_file.seekg(0, input_file.end);
 	const auto size = input_file.tellg();
 
 	// tellg() returns -1 if it fails
@@ -37,8 +37,8 @@ char* FileIO::GetDataFromFile(const std::string& filename, int* length) {
 	input_file.seekg(0, std::ifstream::beg);
 	auto* buffer = new char[size];
 
-	// read data as a block:
-	input_file.read(buffer, size);
+  // read stream as block
+  input_file.read(buffer, read_size == 0 ? size : read_size);
 
 	input_file.close();
 	return buffer;

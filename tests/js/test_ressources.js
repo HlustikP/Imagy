@@ -35,7 +35,7 @@ const imageProcessing = {
             targetHash: 'c5fcd03872f66d4d361f2da9241410e17224321ce563c88b355141b2d3030a07',
         },
         bmp: {
-            testFile: resolve(__dirname, '../media/cat.bmp'),
+            testFile: resolve(__dirname, '../media/bmp'),
             targetFile: resolve(__dirname, '../media_output/cat.bmp'),
             targetHash: '145eba200a44556f626ba4cbf60c4218dedbe44ef66573beb30532f19024ecd9',
         },

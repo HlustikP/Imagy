@@ -80,7 +80,8 @@ proportions are retained.
 See the [the according doc file](docs/BINDING.md) for a full documentation.
 
 ## Build Requirements
-This package has been built and tested on Windows 10 and Kali Linux 2021.4 x64 via WSL2.
+This package has been built and tested on Windows 10, Kali Linux 2021.4 x64
+and Ubuntu 20.04.4 LTS via WSL2.
 
 Library Specifcs:
 - C++ 17 or higher

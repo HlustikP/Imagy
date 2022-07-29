@@ -30,8 +30,8 @@ if(WIN32)
 endif()
 
 if(UNIX)
-    find_package(ZLIB REQUIRED)
-    find_package(PNG REQUIRED)
+    #find_package(ZLIB REQUIRED)
+    #find_package(PNG REQUIRED)
     list(APPEND CMAKE_PREFIX_PATH "/opt/libjpeg-turbo/lib64/cmake/libjpeg-turbo")
     find_package(libjpeg-turbo CONFIG REQUIRED)
     find_library(WEBP_LIBRARY NAMES webp)
@@ -65,21 +65,28 @@ if(WIN32)
         ${libpng_dir}/libpng16.lib
         "${jpeglib_dir}/jpeg-static.lib"
         ${libwebp_dir}/libwebp.lib
-				${libwebp_dir}/libwebpmux.lib
-				${libwebp_dir}/libwebpdemux.lib
+		${libwebp_dir}/libwebpmux.lib
+		${libwebp_dir}/libwebpdemux.lib
     )
     set(WIN_LIBS ${WIN_LIBS} PARENT_SCOPE)
 
-    target_link_libraries(imagy_test ${WIN_LIBS})
+    #target_link_libraries(imagy_test ${WIN_LIBS})
+    target_link_libraries(image ${WIN_LIBS})
 endif()
 
 if(UNIX)
-    target_link_libraries(imagy_test ZLIB::ZLIB
-        ${PNG_LIBRARY}
+    target_link_libraries(imagy_test
+        #ZLIB::ZLIB
+        #${PNG_LIBRARY}
+        "/usr/lib/x86_64-linux-gnu/libz.a"
+        "/usr/local/lib/libpng.a"
         "/opt/libjpeg-turbo/lib64/libjpeg.a"
-        ${WEBP_LIBRARY}
-        ${WEBP_DEMUX_LIBRARY}
-        ${WEBP_MUX_LIBRARY}
+        "/usr/local/lib/libwebp.a"
+        "/usr/local/lib/libwebpmux.a"
+        "/usr/local/lib/libwebpdemux.a"
+        #${WEBP_LIBRARY}
+        #${WEBP_DEMUX_LIBRARY}
+        #${WEBP_MUX_LIBRARY}
     )
 endif()
 

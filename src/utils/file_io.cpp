@@ -38,7 +38,7 @@ char* FileIO::GetDataFromFile(const std::string& filename, int* length, int read
 	auto* buffer = new char[size];
 
   // read stream as block
-  input_file.read(buffer, read_size == 0 ? size : read_size);
+  input_file.read(buffer, read_size == 0 ? static_cast<int>(size) : read_size);
 
 	input_file.close();
 	return buffer;

@@ -4,7 +4,7 @@
       'target_name': 'imagy',
       'cflags!': [ '-fno-exceptions' ],
       'cflags_cc!': [ '-fno-exceptions' ],
-      'cflags_cc': [ '-std=gnu++17' ],
+      'cflags_cc': [ '-std=gnu++17', '-fPIC' ],
       'sources': [
         'src/binding/imagy.cpp',
         'src/binding/async_workers.hpp',
@@ -19,8 +19,8 @@
      ],
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
 	  'conditions': [ ["OS=='win'",
-		{
-      'link_settings': {
+    		{
+             'link_settings': {
 			  'libraries': [
 			    'image',
 			    'utils',
@@ -28,26 +28,25 @@
 			    'libwebpmux',
 			    'libwebpdemux',
 			    'jpeg-static',
-			    'libpng16',
-			    'zlib'
+			    'libpng16'
 			  ],
 	  },
-			'configurations': {
+		'configurations': {
 				'Release': {
-          'library_dirs': [
+        'library_dirs': [
             'src/libs/x64-release',
 			    ],
-					'msvs_settings': {
-						'VCCLCompilerTool': {
-							'RuntimeLibrary': 0,
-							'ExceptionHandling': 1,
-						    'AdditionalOptions': [
-                  '-std:c++17',
-                  '/GR',
-                  '/EHsc',
-						    ],
-						}
-					}
+				  'msvs_settings': {
+					  'VCCLCompilerTool': {
+					  'RuntimeLibrary': 0,
+					  'ExceptionHandling': 1,
+						  'AdditionalOptions': [
+                            '-std:c++17',
+                            '/GR',
+                            '/EHsc',
+						  ],
+					  }
+				  }
 				}
 			}
 		}
@@ -57,11 +56,11 @@
         "libraries": [
           "../src/libs/linux-release/libutils.a",
           "../src/libs/linux-release/libimage.a",
-          "/opt/libjpeg-turbo/lib64/libjpeg.so",
-          "/usr/local/lib/libwebp.so",
-          "/usr/local/lib/libwebpmux.so",
-          "/usr/local/lib/libwebpdemux.so",
-          "/usr/lib/x86_64-linux-gnu/libpng.so"
+          "/opt/libjpeg-turbo/lib64/libjpeg.a",
+          "/usr/local/lib/libwebp.a",
+          "/usr/local/lib/libwebpmux.a",
+          "/usr/local/lib/libwebpdemux.a",
+          "/usr/local/lib/libpng.a"
         ]
       }
     ]

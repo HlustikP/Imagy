@@ -46,8 +46,9 @@ await imagy.convert({
         });
 ```
 These functions take an Object with two properties as an argument. The first `image` is the path to the file to be converted
-and the second `outName` is the target. The function infers the image type from the **file extension**,
-which is therefore needed. The `convert` function returns a promise that, if resolved, returns
+and the second `outName` is the target. The function tries to infer the image type from the **file extension**,
+or if none is found or the one used is unknown, tries to parse the **file header** to get information on the image type. 
+The `convert` function returns a promise that, if resolved, returns
 and Object with `finished`, `error` and `img`(path to target) keys.
 
 You can also use the `Image` class:

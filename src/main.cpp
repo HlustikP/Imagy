@@ -5,6 +5,7 @@
 #include "pch.h"
 #include "decode.h"
 #include "encode.h"
+#include "imagy.h"
 
 #include <chrono>
 #include <boost/gil/extension/io/jpeg.hpp>

@@ -29,7 +29,8 @@ await imagy.convert({
 ```
 These functions take an Object with two properties as an argument. The first `image` is the path to the file to be converted
 and the second `outName` is the target. The function infers the image type from the **file extension**,
-which is therefore needed. The `convert` function returns a promise that, if resolved, returns
+or if none is found or the one used is unknown, tries to parse the **file header** to get information on the image type. 
+The `convert` function returns a promise that, if resolved, returns
 and Object with `finished`, `error` and `img`(path to target) keys.
 
 The binding also implements the `quickConvert` and `quickConvertSync` functions, which are just
@@ -51,9 +52,10 @@ const imagy = require('imagy');
 
 const img = new imagy.Image('path/to/input/file.png');
 ```
-The constructor will determine the image type via the file extensions, which means it will throw
+The constructor will determine the image type via the file extension, which means it will throw
 an error if no or an invalid extension is detected (see [README](../README.md) for a list of supported
-file types).
+file types). Note though, that as a fallback, the constructor will try to parse the file header to determine 
+the image type.
 
 ### 2.2 Conversion
 Images are automatically decoded when read. Encoding happens upon writing the damage data to

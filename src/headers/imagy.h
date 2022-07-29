@@ -10,6 +10,7 @@
 #include "mux.h"
 #include "demux.h"
 // boost::gil
+#include "boost/gil.hpp"
 #include <boost/gil.hpp>
 #include <boost/gil/extension/io/png.hpp>
 #include <boost/gil/extension/io/jpeg.hpp>

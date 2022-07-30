@@ -1,0 +1,3 @@
+[submodule "tests/media"]
+	path = tests/media
+	url = git@github.com:HlustikP/ImagyTestdata.git

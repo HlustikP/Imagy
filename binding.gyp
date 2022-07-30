@@ -26,7 +26,6 @@
 			    'utils',
 			    'libwebp',
 			    'libwebpmux',
-			    'libwebpdemux',
 			    'jpeg-static',
 			    'libpng16'
 			  ],

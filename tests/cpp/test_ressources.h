@@ -31,6 +31,12 @@ const struct png {
   inline static std::string target_hash = "6c18ae9a2cf06365304d246f09be7389406dbaa09d84199d5fa0786f9375a67c";
 };
 
+const struct tiff {
+  inline static std::string test_file = "../../../tests/media/cat.tiff";
+  inline static std::string target_file = "../../../tests/media_output/cat.tiff";
+  inline static std::string target_hash = "1b68f07013f8c6c1768d1c63cd51c2d0d0e9e404183cfd9d6bb77d315c590284";
+};
+
 const struct flip_d {
   inline static std::string test_file = "../../../tests/media/cat.jpg";
   inline static std::string target_file = "../../../tests/media_output/flipped_cat_d.jpg";

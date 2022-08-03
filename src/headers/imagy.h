@@ -15,6 +15,7 @@
 #include <boost/gil/extension/io/png.hpp>
 #include <boost/gil/extension/io/jpeg.hpp>
 #include <boost/gil/extension/io/bmp.hpp>
+#include <boost/gil/extension/io/tiff.hpp>
 #include <boost/gil/extension/numeric/resample.hpp>
 #include <boost/gil/extension/numeric/sampler.hpp>
 
@@ -34,11 +35,12 @@ enum ColorModel {
 };
 
 enum ImgFormat {
-	BMP,
-	JPEG,
-	PNG,
-	WEBP,
-	GIF,
+  BMP,
+  JPEG,
+  PNG,
+  WEBP,
+  GIF,
+  TIFF,
 
 	// always have this as last entry
 	INVALID = 99,
@@ -63,6 +65,7 @@ const static std::vector<uint8_t> JPEG_SIG = { 0xFF, 0xD8 };
 const static std::vector<uint8_t> PNG_SIG = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
 const static std::vector<uint8_t> BMP_SIG = { 0x42, 0x4D };
 const static std::vector<uint8_t> WEBP_SIG = { 0x57, 0x45, 0x42, 0x50 };
+const static std::vector<uint8_t> TIFF_SIG = { 0x49, 0x49, 0x2A };
 
 // Tuple types: File header/signature, Offset of signature begin, corresponding file type
 static inline std::vector<std::tuple<const std::vector<uint8_t>, int, ImgFormat>> img_signatures {
@@ -70,7 +73,8 @@ static inline std::vector<std::tuple<const std::vector<uint8_t>, int, ImgFormat>
 	std::tuple(JPEG_SIG, 0, JPEG),
 	std::tuple(PNG_SIG, 0, PNG),
 	std::tuple(BMP_SIG, 0, BMP),
-	std::tuple(WEBP_SIG, 8, WEBP)
+	std::tuple(WEBP_SIG, 8, WEBP),
+	std::tuple(TIFF_SIG, 0, TIFF)
 };
 
 class Image {
@@ -100,6 +104,7 @@ private:
   int DecodePng(gil::rgb8_image_t image, std::string& filename);
   int DecodePng(gil::rgba8_image_t image, std::string& filename);
   int DecodeJpeg(gil::rgb8_image_t image, std::string& filename);
+  int DecodeTiff(gil::rgb8_image_t image, std::string& filename);
   int DecodeBmp(gil::rgb8_image_t image, std::string& filename);
   int DecodeBmp(gil::rgba8_image_t image, std::string& filename);
 

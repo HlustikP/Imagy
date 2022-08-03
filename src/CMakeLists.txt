@@ -27,6 +27,7 @@ if(WIN32)
     check_lib("JPEGLIB" "jpeglib_dir" "JPEGLIB_INCLUDE" "jpeg-static" FALSE)
     check_lib("LIBPNG" "libpng_dir" "LIBPNG_INCLUDE" "libpng16" FALSE)
     check_lib("libwebp" "libwebp_dir" "LIBWEBP_INCLUDE" "libwebp" FALSE)
+    check_lib("libtiff" "libtiff_dir" "LIBTIFF_INCLUDE" "tiff" FALSE)
 endif()
 
 if(UNIX)
@@ -65,8 +66,9 @@ if(WIN32)
         ${libpng_dir}/libpng16.lib
         "${jpeglib_dir}/jpeg-static.lib"
         ${libwebp_dir}/libwebp.lib
-		${libwebp_dir}/libwebpmux.lib
-		${libwebp_dir}/libwebpdemux.lib
+		    ${libwebp_dir}/libwebpmux.lib
+		    ${libwebp_dir}/libwebpdemux.lib
+        ${libtiff_dir}/tiff.lib
     )
     set(WIN_LIBS ${WIN_LIBS} PARENT_SCOPE)
 
@@ -78,12 +80,13 @@ if(UNIX)
     target_link_libraries(imagy_test
         #ZLIB::ZLIB
         #${PNG_LIBRARY}
-        "/usr/lib/x86_64-linux-gnu/libz.a"
-        "/usr/local/lib/libpng.a"
+        "/usr/local/lib/libpng16.a"
         "/opt/libjpeg-turbo/lib64/libjpeg.a"
-        "/usr/local/lib/libwebp.a"
         "/usr/local/lib/libwebpmux.a"
         "/usr/local/lib/libwebpdemux.a"
+        "/usr/local/lib/libwebp.a"
+        "/usr/local/lib/libtiff.a"
+        "/usr/lib/x86_64-linux-gnu/libz.a"
         #${WEBP_LIBRARY}
         #${WEBP_DEMUX_LIBRARY}
         #${WEBP_MUX_LIBRARY}

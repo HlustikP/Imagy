@@ -80,6 +80,21 @@ TEST(Image, Png) {
   delete[] output_img_data;
 }
 
+TEST(Image, Tiff) {
+  int length = 0;
+  std::string file_content;
+  imagy::Image img(test::tiff::test_file);
+  img.WriteImgToFile(test::tiff::target_file, imagy::ImgFormat::TIFF);
+  auto output_img_data = utils::FileIO::GetDataFromFile(test::tiff::target_file, &length);
+
+  file_content.assign(output_img_data, length);
+
+  auto test_string = hashString(file_content);
+
+  EXPECT_EQ(test_string, test::tiff::target_hash);
+  delete[] output_img_data;
+}
+
 TEST(Manipulation, FlipD) {
   int length = 0;
   std::string file_content;

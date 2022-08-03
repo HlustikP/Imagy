@@ -49,6 +49,10 @@ ImgFormat Image::GetFileExtension(std::string& filename) {
     return GIF;
   }
 
+  if (path.extension() == ".tiff" || path.extension() == ".tif") {
+    return TIFF;
+  }
+
 	return INVALID;
 };
 
@@ -267,6 +271,30 @@ int Image::LoadImgData(std::string& filename, ImgFormat format) {
 			DecodeJpeg(rgb_image, filename);
 			break;
 		}
+    case TIFF: {
+      gil::rgb8_image_t rgb_image;
+
+      const auto info = gil::read_image_info(filename, gil::tiff_tag());
+      const auto color_space = info._info._photometric_interpretation;
+
+      // specification source: https://www.awaresystems.be/imaging/tiff/tifftags/photometricinterpretation.html
+      switch (color_space) {
+        case 2:
+          [[fallthrough]]; // Both 2 and 3 define an RGB color space
+        case 3:
+          alpha_ = 0;
+          break;
+        // unknown or unsupported
+        default:
+        return 1;
+      }
+
+      width_ = info._info._width;
+      height_ = info._info._height;
+
+      DecodeTiff(rgb_image, filename);
+      break;
+    }
 		case PNG: {
 			// TODO: 8 or 16 bit depth???
 			gil::rgb8_image_t rgb_image;
@@ -345,6 +373,12 @@ int Image::WriteImgToFile(std::string& filename, ImgFormat format) {
 		gil::write_view(filename, view, gil::png_tag());
 		break;
 	}
+  case TIFF: {
+    const auto byte_rowsize = alpha_ ? width_ * 4 : width_ * 3;
+    const auto view = gil::interleaved_view(width_, height_, reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
+    gil::write_view(filename, view, gil::tiff_tag());
+    break;
+  }
 	case WEBP: {
     if (!animated_) {
       uint8_t* out_data = nullptr;
@@ -451,6 +485,26 @@ int Image::DecodeJpeg(gil::rgb8_image_t image, std::string& filename) {
 	std::copy(decoded, decoded + size_, data_.begin());
 
 	return 0;
+}
+
+int Image::DecodeTiff(gil::rgb8_image_t image, std::string& filename) {
+  gil::read_and_convert_image(filename, image, gil::tiff_tag());
+
+  // no alpha channel, so only rgb 
+  const auto channel_count = 3;
+
+  const auto iter = gil::view(image).begin();
+  auto& pixels = *iter;
+  auto* decoded = &(pixels[0]);
+
+  // interleaved rgb(a) stores an amount of bytes equal to the amount of channels times the amount of pixels
+  size_ = width_ * height_ * channel_count;
+
+  data_.reserve(size_);
+
+  std::copy(decoded, decoded + size_, data_.begin());
+
+  return 0;
 }
 
 int Image::DecodeBmp(gil::rgb8_image_t image, std::string& filename) {

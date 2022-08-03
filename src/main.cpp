@@ -17,7 +17,7 @@ int main(int argc, const char* argv[]) {
   auto end = std::chrono::system_clock::now();
   auto diff = std::chrono::duration_cast <std::chrono::milliseconds> (end - start).count();
 
-  std::string input = "../../../tests/media/bmp";
+  std::string input = "../../../tests/media/cat.tiff";
   std::string output = "cat_out.jpg";
 
   auto img = imagy::Image(input);

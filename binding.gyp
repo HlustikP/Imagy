@@ -20,14 +20,16 @@
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
 	  'conditions': [ ["OS=='win'",
     		{
-             'link_settings': {
+      'link_settings': {
 			  'libraries': [
 			    'image',
 			    'utils',
+          'zlib',
 			    'libwebp',
 			    'libwebpmux',
 			    'jpeg-static',
-			    'libpng16'
+			    'libpng16',
+          'tiff'
 			  ],
 	  },
 		'configurations': {
@@ -56,10 +58,11 @@
           "../src/libs/linux-release/libutils.a",
           "../src/libs/linux-release/libimage.a",
           "/opt/libjpeg-turbo/lib64/libjpeg.a",
-          "/usr/local/lib/libwebp.a",
           "/usr/local/lib/libwebpmux.a",
           "/usr/local/lib/libwebpdemux.a",
-          "/usr/local/lib/libpng.a"
+          "/usr/local/lib/libwebp.a",
+          "/usr/local/lib/libpng.a",
+          "/usr/local/lib/libtiff.a"
         ]
       }
     ]

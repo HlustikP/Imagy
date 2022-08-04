@@ -2,7 +2,7 @@ Image conversion and manipulation library with node binding
 
 ## Features
 ### Supported Image Formats:
-- In all directions: BMP, PNG, JPEG, WEBP
+- In all directions: BMP, PNG, JPEG, WEBP, TIFF
 - In one direction only: GIF -> animated WEBP
 ### Image Manipulation:
 - Resizing (unanimated images only)
@@ -46,7 +46,7 @@ await imagy.convert({
         });
 ```
 These functions take an Object with two properties as an argument. The first `image` is the path to the file to be converted
-and the second `outName` is the target. The function tries to infer the image type from the **file extension**,
+and the second `outName` is the target. The function tries to infer the input's image type from the **file extension**,
 or if none is found or the one used is unknown, tries to parse the **file header** to get information on the image type. 
 The `convert` function returns a promise that, if resolved, returns
 and Object with `finished`, `error` and `img`(path to target) keys.
@@ -147,4 +147,5 @@ If that doesnt help, try running the `node-gyp` commands in sequence: `node-gyp 
 - Expose the libweb configs api to enable finetuning of animated images
 
 ## Attributions
-All images used for unit testing have their source credited [HERE](ATTRIBUTIONS.md)
+All images used for unit testing have their source credited [HERE](tests/media/ATTRIBUTIONS.md)
+(needs the related submodule to be installed).

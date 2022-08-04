@@ -78,18 +78,13 @@ endif()
 
 if(UNIX)
     target_link_libraries(imagy_test
-        #ZLIB::ZLIB
-        #${PNG_LIBRARY}
         "/usr/local/lib/libpng16.a"
         "/opt/libjpeg-turbo/lib64/libjpeg.a"
         "/usr/local/lib/libwebpmux.a"
         "/usr/local/lib/libwebpdemux.a"
         "/usr/local/lib/libwebp.a"
         "/usr/local/lib/libtiff.a"
-        "/usr/lib/x86_64-linux-gnu/libz.a"
-        #${WEBP_LIBRARY}
-        #${WEBP_DEMUX_LIBRARY}
-        #${WEBP_MUX_LIBRARY}
+        "/usr/local/lib/libz.a"
     )
 endif()
 

@@ -4,7 +4,7 @@
       'target_name': 'imagy',
       'cflags!': [ '-fno-exceptions' ],
       'cflags_cc!': [ '-fno-exceptions' ],
-      'cflags_cc': [ '-std=gnu++17', '-fPIC' ],
+      'cflags_cc': [ '-std=gnu++17' ],
       'sources': [
         'src/binding/imagy.cpp',
         'src/binding/async_workers.hpp',
@@ -24,12 +24,12 @@
 			  'libraries': [
 			    'image',
 			    'utils',
-          'zlib',
 			    'libwebp',
 			    'libwebpmux',
 			    'jpeg-static',
 			    'libpng16',
-          'tiff'
+          'tiff',
+          'zlib'
 			  ],
 	  },
 		'configurations': {
@@ -62,7 +62,8 @@
           "/usr/local/lib/libwebpdemux.a",
           "/usr/local/lib/libwebp.a",
           "/usr/local/lib/libpng.a",
-          "/usr/local/lib/libtiff.a"
+          "/usr/local/lib/libtiff.a",
+          "/usr/local/lib/libz.a"
         ]
       }
     ]

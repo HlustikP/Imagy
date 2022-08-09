@@ -6,5 +6,12 @@ node_modules/
 
 scratch.js
 
+src/headers/*
+src/headers/*/
+!src/headers/gif_decode.h
+!src/headers/file_io.h
+!src/headers/imagy.h
+!src/headers/boost
+
 tests/media_output/*
 !tests/media_output/.gitkeep

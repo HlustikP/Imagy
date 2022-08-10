@@ -1,11 +1,12 @@
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 set(CMAKE_CXX_STANDARD 17)
 
 project(imagy_test)
 
+include(FetchContent)
+
 if(WIN32)
     set(gtest_force_shared_crt)
-    include(FetchContent)
     FetchContent_Declare(
       googletest
       GIT_REPOSITORY https://github.com/google/googletest.git
@@ -14,6 +15,17 @@ if(WIN32)
 
     FetchContent_MakeAvailable(googletest)
 endif()
+
+FetchContent_Declare(boost
+        GIT_REPOSITORY https://github.com/HlustikP/boost-headers-only.git
+        GIT_TAG        main
+    )
+
+FetchContent_GetProperties(boost)
+if(NOT boost_POPULATED)
+    FetchContent_Populate(boost)
+endif()
+include_directories(${boost_SOURCE_DIR})
 
 set(CompilerFlags
         CMAKE_CXX_FLAGS

@@ -15,7 +15,9 @@
       ],
       'include_dirs': [
         "<!@(node -p \"require('node-addon-api').include\")",
-		    'src/headers'
+		    'src/headers',
+			'bin/x64-release/_deps/boost-src',
+			'bin/linux-release/_deps/boost-src'
      ],
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
 	  'conditions': [ ["OS=='win'",

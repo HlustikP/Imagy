@@ -16,11 +16,6 @@ if (WIN32)
 
     include_directories(${PROJECT_SOURCE_DIR}/src/headers)
 
-    if(DEFINED ENV{BOOST_ROOT})
-        message(STATUS $ENV{BOOST_ROOT})
-        include_directories($ENV{BOOST_ROOT})
-    endif()
-
     target_link_libraries(tests GTest::gtest_main ${WIN_LIBS} utils image)
 
     include(GoogleTest)

@@ -1,7 +1,8 @@
 Image conversion and manipulation library with node binding
 
-Requires either x64 Windows 10 (might run on Windows Server, not tested) or x64 Debian-based system with support for glibc 2.31 or higher.
-Check your glibc version with:
+Requires either x64 Windows 10 (might run on Windows Server, not tested)
+or x64 Debian-based system with support for glibc `2.31` or higher.
+You can check your glibc version with:
 ```bash
 ls /lib/x86_64-linux-gnu/ | grep -E '^libc-[0-9]\.[0-9]{1,2}\.so$'
 ```

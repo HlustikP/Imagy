@@ -83,6 +83,7 @@ if(UNIX)
         "/usr/local/lib/libwebpmux.a"
         "/usr/local/lib/libwebpdemux.a"
         "/usr/local/lib/libwebp.a"
+        "/usr/local/lib/libsharpyuv.a"
         "/usr/local/lib/libtiff.a"
         "/usr/local/lib/libz.a"
     )

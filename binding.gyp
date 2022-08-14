@@ -67,6 +67,7 @@
           "/usr/local/lib/libwebp.a",
           "/usr/local/lib/libpng.a",
           "/usr/local/lib/libtiff.a",
+          "/usr/local/lib/libsharpyuv.a",
           "/usr/local/lib/libz.a"
         ]
       }

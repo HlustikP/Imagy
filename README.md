@@ -9,8 +9,8 @@ ls /lib/x86_64-linux-gnu/ | grep -E '^libc-[0-9]\.[0-9]{1,2}\.so$'
 
 ## Features
 ### Supported Image Formats:
-- In all directions: BMP, PNG, JPEG, WEBP, TIFF
-- In one direction only: GIF -> animated WEBP
+- Conversion in all directions: BMP, PNG, JPEG, WEBP, TIFF
+- Conversion in one direction only: GIF -> animated WEBP
 ### Image Manipulation:
 - Resizing (unanimated images only)
 - Flipping (unanimated images only)
@@ -22,6 +22,9 @@ ever done upon FileIO.
 
 Additionally, the en- and decoding routines for animated images make use of multithreading to
 speed up the process.
+
+Unlike other packages, imagy will NOT need to download additional files in order to run as an npm package.
+The size you see under `Unpacked Size` on npm is the actual size.
 
 ## Usage
 This library comes with pre-built binaries. You can install the package with

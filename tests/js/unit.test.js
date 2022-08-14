@@ -43,6 +43,15 @@ describe('Test gif decoding and (animated) webp encoding',() => {
         expect(hashAndTest(target, createHash(hash_algorithm), targetHash)).toBeTruthy();
     });
 
+    it('converts tiny gif via alternate function signature', () => {
+        const [testFile, targetFile, targetHash] = getTestData(tests.imageProcessing.gif_decoding.vanilla);
+        const target = targetFile;
+
+        imagy.convertSync(testFile, targetFile);
+
+        expect(hashAndTest(target, createHash(hash_algorithm), targetHash)).toBeTruthy();
+    });
+
     it('converts gif with transparency into webp', () => {
         const [testFile, targetFile, targetHash] = getTestData(tests.imageProcessing.gif_decoding.transparency);
         const target = targetFile;
@@ -140,6 +149,16 @@ describe('Test async', () => {
             'image': testFile,
             'outName': targetFile,
         })).resolves.toBeTruthy();
+    });
+});
+
+describe('Test async', () => {
+    it('returns a resolvable promise via alternate function signature', async () => {
+        expect.assertions(1);
+
+        const [testFile, targetFile] = getTestData(tests.imageProcessing.image_conversion.png);
+
+        await expect(imagy.convert(testFile, targetFile)).resolves.toBeTruthy();
     });
 });
 

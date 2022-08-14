@@ -2,116 +2,148 @@
 
 Napi::Object Convert(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-	const auto image_infos = info[0].As<Napi::Object>();
 
-	image_infos.Set("error", false);
+  const auto argument_index = ValidateConvertSignatures(info);
+  auto out_object = Napi::Object::New(env);
+  out_object.Set("error", false);
 
-  if (info.Length() < 1 || info.Length() > 2) {
-    Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
-    return Napi::Object::New(env);
+  if (argument_index == -1) {
+    out_object.Set("error", true);
+    return out_object;
   }
 
-  if (!info[0].IsObject()) {
-    Napi::TypeError::New(env, "Wrong argument type, expected Object").ThrowAsJavaScriptException();
-		return Napi::Object::New(env);
+  std::string in_filename;
+  std::string out_filename;
+  imagy::ImgFormat format = imagy::ImgFormat::INVALID;
+
+  if (argument_index == SIGNATURE_OBJECT) {
+    auto& image_infos = info[0].As<Napi::Object>();
+    if (info[0].As<Napi::Object>().Has("image")) {
+      in_filename = std::string(image_infos.Get("image").As<Napi::String>());
+    }
+    else {
+      Napi::Error::New(env, "\'image\' property not set").ThrowAsJavaScriptException();
+      out_object.Set("error", true);
+      return out_object;
+    }
+
+    if (image_infos.Has("outName")) {
+      out_filename = std::string(image_infos.Get("outName").As<Napi::String>());
+      format = imagy::Image::GetFileExtension(out_filename);
+      if (format == imagy::ImgFormat::INVALID) {
+        Napi::Error::New(env, "Cannot infer file format from outName extension").ThrowAsJavaScriptException();
+        out_object.Set("error", true);
+        return out_object;
+      }
+    }
+    else {
+      Napi::Error::New(env, "\'outName\' property not set").ThrowAsJavaScriptException();
+      out_object.Set("error", true);
+      return out_object;
+    }
   }
 
-	std::string in_filename;
-	std::string out_filename;
+  if (argument_index == SIGNATURE_STRING_STRING) {
+    in_filename = std::string(info[0].As<Napi::String>());
+    out_filename = std::string(info[1].As<Napi::String>());
 
-	if (image_infos.Has("image")) {
-		in_filename = std::string(image_infos.Get("image").As<Napi::String>());
-	} else {
-		Napi::TypeError::New(env, "\'image\' property not set").ThrowAsJavaScriptException();
-		return Napi::Object::New(env);
-	}
-
-	imagy::ImgFormat format;
-
-	if (image_infos.Has("outName")) {
-		out_filename = std::string(image_infos.Get("outName").As<Napi::String>());
-		format = imagy::Image::GetFileExtension(out_filename);
-		if (format == imagy::ImgFormat::INVALID) {
-			Napi::Error::New(env, "Cannot infer file format from outName extension").ThrowAsJavaScriptException();
-			return Napi::Object::New(env);
-		}
-	} else {
-		Napi::Error::New(env, "\'outName\' property not set").ThrowAsJavaScriptException();
-		return Napi::Object::New(env);
-	}
+    format = imagy::Image::GetFileExtension(out_filename);
+    if (format == imagy::ImgFormat::INVALID) {
+      Napi::Error::New(env, "Cannot infer file format from outName extension").ThrowAsJavaScriptException();
+      out_object.Set("error", true);
+      return out_object;
+    }
+  }
 
   imagy::Image img(in_filename);
   const auto result = img.WriteImgToFile(out_filename, format);
 
-	image_infos.Set("finished", true);
+  out_object.Set("finished", true);
 
 	switch (result) {
 		case 0:
 			break;
 		case 1:
-			image_infos.Set("error", true);
+      out_object.Set("error", true);
 			Napi::Error::New(env, "Error while encoding").ThrowAsJavaScriptException();
-			return image_infos;
+			return out_object;
 		case 2:
-			image_infos.Set("error", true);
+      out_object.Set("error", true);
 			Napi::Error::New(env, "Error when trying to infer file format from outFile").ThrowAsJavaScriptException();
-			return image_infos;
+			return out_object;
 	}
 
-  return image_infos;
+  return out_object;
 }
 
 Napi::Promise ConvertAsync(const Napi::CallbackInfo& info) {
 	Napi::Env env = info.Env();
 	auto deferred = Napi::Promise::Deferred::New(info.Env());
-	Napi::Object image_infos(env, info[0].As<Napi::Object>());
 
-	image_infos.Set("error", false);
-
-	if (info.Length() < 1 || info.Length() > 2) {
-		Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
-		deferred.Reject(Napi::Number::New(env, 0));
-		return deferred.Promise();
-	}
-
-	if (!image_infos.IsObject()) {
-		Napi::TypeError::New(env, "Wrong argument type, expected Object").ThrowAsJavaScriptException();
-		deferred.Reject(Napi::Number::New(env, 0));
-		return deferred.Promise();
-	}
+  const auto argument_index = ValidateConvertSignatures(info);
 
 	std::string in_filename;
 	std::string out_filename;
+  imagy::ImgFormat format = imagy::ImgFormat::INVALID;
 
-	if (image_infos.Has("image")) {
-		in_filename = std::string(image_infos.Get("image").As<Napi::String>());
-	}
-	else {
-		Napi::TypeError::New(env, "\'image\' property not set").ThrowAsJavaScriptException();
-		deferred.Reject(Napi::Number::New(env, 0));
-		return deferred.Promise();
-	}
+  if (argument_index == SIGNATURE_OBJECT) {
+    auto& image_infos = info[0].As<Napi::Object>();
+    if (image_infos.Has("image")) {
+      in_filename = std::string(image_infos.Get("image").As<Napi::String>());
+    }
+    else {
+      const auto err = Napi::Error::New(env, "\'image\' property not set");
+      err.ThrowAsJavaScriptException();
+      deferred.Reject(err.Value());
+      return deferred.Promise();
+    }
 
-	imagy::ImgFormat format;
+    if (image_infos.Has("outName")) {
+      out_filename = std::string(image_infos.Get("outName").As<Napi::String>());
+      format = imagy::Image::GetFileExtension(out_filename);
+      if (format == imagy::ImgFormat::INVALID) {
+        const auto err = Napi::Error::New(env, "Cannot infer file format from outName extension");
+        err.ThrowAsJavaScriptException();
+        deferred.Reject(err.Value());
+        return deferred.Promise();
+      }
+    }
+    else {
+      const auto err = Napi::Error::New(env, "\'outName\' property not set");
+      err.ThrowAsJavaScriptException();
+      deferred.Reject(err.Value());
+      return deferred.Promise();
+    }
+  }
 
-	if (image_infos.Has("outName")) {
-		out_filename = std::string(image_infos.Get("outName").As<Napi::String>());
-		format = imagy::Image::GetFileExtension(out_filename);
-		if (format == imagy::ImgFormat::INVALID) {
-			Napi::Error::New(env, "Cannot infer file format from outName extension").ThrowAsJavaScriptException();
-			deferred.Reject(Napi::Number::New(env, 0));
-			return deferred.Promise();
-		}
-	}
-	else {
-		Napi::Error::New(env, "\'outName\' property not set").ThrowAsJavaScriptException();
-		deferred.Reject(Napi::Number::New(env, 0));
-		return deferred.Promise();
-	}
+  if (argument_index == SIGNATURE_STRING_STRING) {
+    in_filename = std::string(info[0].As<Napi::String>());
+    out_filename = std::string(info[1].As<Napi::String>());
+
+    format = imagy::Image::GetFileExtension(out_filename);
+    if (format == imagy::ImgFormat::INVALID) {
+      Napi::Error::New(env, "Cannot infer file format from outName extension").ThrowAsJavaScriptException();
+    }
+  }
 
 	ConversionWorker* conversion_worker = new ConversionWorker(env, in_filename, out_filename, format);
 	auto promise = conversion_worker->GetPromise();
 	conversion_worker->Queue();
 
 	return promise;
+}
+
+inline int ValidateConvertSignatures(const Napi::CallbackInfo& info) {
+  // Object as a config
+  napi_valuetype arg00 = napi_object;
+
+  // Input + Output file strings
+  napi_valuetype arg10 = napi_string;
+  napi_valuetype arg11 = napi_string;
+
+  std::vector<napi_valuetype> sig0 = { arg00 };
+  std::vector<napi_valuetype> sig1 = { arg10, arg11 };
+  std::vector<std::vector<napi_valuetype>> func_sigs = { sig0, sig1 };
+
+  return validate_arguments(info, func_sigs);
 }

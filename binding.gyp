@@ -8,19 +8,21 @@
       'sources': [
         'src/binding/imagy.cpp',
         'src/binding/async_workers.hpp',
-        'src/binding/convert.h',
         'src/binding/convert.cpp',
+        'src/binding/convert.h',
         'src/binding/image.cpp',
-        'src/binding/image.h'
+        'src/binding/image.h',
+        'src/binding/utils.cpp',
+        'src/binding/utils.h',
       ],
       'include_dirs': [
         "<!@(node -p \"require('node-addon-api').include\")",
 		    'src/headers',
-			'bin/x64-release/_deps/boost-src',
-			'bin/linux-release/_deps/boost-src'
+			  'bin/x64-release/_deps/boost-src',
+			  'bin/linux-release/_deps/boost-src'
      ],
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
-	  'conditions': [ ["OS=='win'",
+	    'conditions': [ ["OS=='win'",
     		{
       'link_settings': {
 			  'libraries': [

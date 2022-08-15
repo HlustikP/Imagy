@@ -7,10 +7,9 @@ int validate_arguments(const Napi::CallbackInfo& info, std::vector<std::vector<n
 
   bool size_error = false;
   bool type_error = false;
-  int sig_index = 0;
 
   //for (auto& signature : function_signatures) {
-  for (auto i = 0; i < function_signatures.size(); i++) {
+  for (unsigned int i = 0; i < function_signatures.size(); i++) {
     const auto size = function_signatures[i].size();
     if (size != info.Length()) {
       if (function_signatures.size() == 1) {

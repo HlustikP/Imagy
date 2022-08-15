@@ -33,6 +33,17 @@ or if none is found or the one used is unknown, tries to parse the **file header
 The `convert` function returns a promise that, if resolved, returns
 and Object with `finished`, `error` and `img`(path to target) keys.
 
+Alternatively you can also input two string arguments respectively of the path to the
+input and output file:
+```js
+const imagy = require('imagy');
+
+imagy.convertSync("inputFile", "outputFile");
+
+// or async:
+await imagy.convert("inputFile", "outputFile");
+```
+
 The binding also implements the `quickConvert` and `quickConvertSync` functions, which are just
 aliases of the beforementioned two functions.
 

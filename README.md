@@ -45,6 +45,9 @@ imagy.convertSync({
             'image': 'path/to/file.jpg',
             'outName': 'path/to/target.png',
         });
+
+// Alternate way without intermediate object:
+imagy.convertSync("inputFile", "outputFile");
 ```
 ```js
 const imagy = require('imagy');
@@ -54,6 +57,9 @@ await imagy.convert({
             'image': 'path/to/file.jpg',
             'outName': 'path/to/target.png',
         });
+
+// Alternate way without intermediate object:
+await imagy.convert("inputFile", "outputFile");
 ```
 These functions take an Object with two properties as an argument. The first `image` is the path to the file to be converted
 and the second `outName` is the target. The function tries to infer the input's image type from the **file extension**,

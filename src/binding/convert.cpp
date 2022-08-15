@@ -17,7 +17,7 @@ Napi::Object Convert(const Napi::CallbackInfo& info) {
   imagy::ImgFormat format = imagy::ImgFormat::INVALID;
 
   if (argument_index == SIGNATURE_OBJECT) {
-    auto& image_infos = info[0].As<Napi::Object>();
+    const auto image_infos = info[0].As<Napi::Object>();
     if (info[0].As<Napi::Object>().Has("image")) {
       in_filename = std::string(image_infos.Get("image").As<Napi::String>());
     }
@@ -87,7 +87,7 @@ Napi::Promise ConvertAsync(const Napi::CallbackInfo& info) {
   imagy::ImgFormat format = imagy::ImgFormat::INVALID;
 
   if (argument_index == SIGNATURE_OBJECT) {
-    auto& image_infos = info[0].As<Napi::Object>();
+    const auto image_infos = info[0].As<Napi::Object>();
     if (image_infos.Has("image")) {
       in_filename = std::string(image_infos.Get("image").As<Napi::String>());
     }

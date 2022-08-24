@@ -28,6 +28,7 @@ if(WIN32)
     check_lib("LIBPNG" "libpng_dir" "LIBPNG_INCLUDE" "libpng16" FALSE)
     check_lib("libwebp" "libwebp_dir" "LIBWEBP_INCLUDE" "libwebp" FALSE)
     check_lib("libtiff" "libtiff_dir" "LIBTIFF_INCLUDE" "tiff" FALSE)
+    check_lib("libavif" "libavif_dir" "LIBAVIF_INCLUDE" "avif" FALSE)
 endif()
 
 if(UNIX)
@@ -69,6 +70,9 @@ if(WIN32)
 		    ${libwebp_dir}/libwebpmux.lib
 		    ${libwebp_dir}/libwebpdemux.lib
         ${libtiff_dir}/tiff.lib
+        ${libavif_dir}/avif.lib
+        ${libavif_dir}/libgav1.lib
+        ${libavif_dir}/absl.lib
     )
     set(WIN_LIBS ${WIN_LIBS} PARENT_SCOPE)
 

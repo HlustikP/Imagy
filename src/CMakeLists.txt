@@ -90,6 +90,7 @@ if(UNIX)
         "/usr/local/lib/libsharpyuv.a"
         "/usr/local/lib/libtiff.a"
         "/usr/local/lib/libz.a"
+        "/usr/local/lib/libavif.a"
     )
 endif()
 

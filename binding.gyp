@@ -33,7 +33,10 @@
 			    'jpeg-static',
 			    'libpng16',
           'tiff',
-          'zlib'
+          'zlib',
+          'avif',
+          'libgav1',
+          'absl'
 			  ],
 	  },
 		'configurations': {

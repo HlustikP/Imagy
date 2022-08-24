@@ -137,6 +137,18 @@ describe('Test image conversions', () => {
 
         expect(hashAndTest(target, createHash(hash_algorithm), targetHash)).toBeTruthy();
     });
+
+    it('decodes avif files', () => {
+        const [testFile, targetFile, targetHash] = getTestData(tests.imageProcessing.image_conversion.avif);
+        const target = targetFile;
+
+        imagy.convertSync({
+            'image': testFile,
+            'outName': target,
+        });
+
+        expect(hashAndTest(target, createHash(hash_algorithm), targetHash)).toBeTruthy();
+    });
 });
 
 describe('Test async', () => {

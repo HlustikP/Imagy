@@ -33,7 +33,10 @@
 			    'jpeg-static',
 			    'libpng16',
           'tiff',
-          'zlib'
+          'zlib',
+          'avif',
+          'libgav1',
+          'absl'
 			  ],
 	  },
 		'configurations': {
@@ -68,7 +71,9 @@
           "/usr/local/lib/libpng.a",
           "/usr/local/lib/libtiff.a",
           "/usr/local/lib/libsharpyuv.a",
-          "/usr/local/lib/libz.a"
+          "/usr/local/lib/libz.a",
+          "/usr/local/lib/libavif.a",
+          "../src/libs/linux-release/libgav1.a"
         ]
       }
     ]

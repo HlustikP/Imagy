@@ -49,6 +49,11 @@ const imageProcessing = {
             targetFile: resolve(__dirname, '../media_output/cat.tiff'),
             targetHash: '1b68f07013f8c6c1768d1c63cd51c2d0d0e9e404183cfd9d6bb77d315c590284',
         },
+        avif: {
+            testFile: resolve(__dirname, '../media/cat.avif'),
+            targetFile: resolve(__dirname, '../media_output/cat.jpg'),
+            targetHash: 'af64d6890bd919974689ea2eac1eb780e9e39851a56f4a516578d033db1d4278',
+        },
     },
     rescaling: {
         bilinear: {

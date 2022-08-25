@@ -1,4 +1,7 @@
 #include "imagy.h"
+#include "imagy.h"
+#include "imagy.h"
+#include "imagy.h"
 
 namespace imagy
 {
@@ -27,36 +30,42 @@ ImgFormat Image::GetFileExtension(std::string& filename) {
 		return INVALID;
 	}
 
+  auto const extension = path.extension();
+
 	// spamming if-checks because switch is illegal with string types
-	if (path.extension() == ".bmp" || path.extension() == ".dib") {
+	if (extension == ".bmp" || extension == ".dib") {
 		return BMP;
 	}
 
-	if (path.extension() == ".jpg" || path.extension() == ".jpeg" || path.extension() == ".jpe"
-		|| path.extension() == ".jif" || path.extension() == ".jfif" || path.extension() == ".jfi") {
+	if (extension == ".jpg" || extension == ".jpeg" || extension == ".jpe"
+		|| extension == ".jif" || extension == ".jfif" || extension == ".jfi") {
 		return JPEG;
 	}
 
-	if (path.extension() == ".png") {
+	if (extension == ".png") {
 		return PNG;
 	}
   
-	if (path.extension() == ".webp") {
+	if (extension == ".webp") {
 		return WEBP;
 	}
 
-  if (path.extension() == ".gif") {
+  if (extension == ".gif") {
     return GIF;
   }
 
-  if (path.extension() == ".tiff" || path.extension() == ".tif") {
+  if (extension == ".tiff" || extension == ".tif") {
     return TIFF;
+  }
+
+  if (extension == ".avif") {
+    return AVIF;
   }
 
 	return INVALID;
 };
 
-/* Changes Scale of image using bilinear interpolation
+/* Changes Scale of image using bilinear interpolation as default
    If either aurgument has value 0, it will be calculated to preserve ratio
    Returns 0 on success, 1 on error */
 int Image::ChangeScale(unsigned int target_height, unsigned int target_width, InterpolationAlgorithms algorithm) {
@@ -76,7 +85,8 @@ int Image::ChangeScale(unsigned int target_height, unsigned int target_width, In
 
   const auto byte_rowsize = alpha_ ? width_ * 4 : width_ * 3;
   gil::rgb8_image_t new_img(target_width, target_height);
-  const auto src_view = gil::interleaved_view(width_, height_, reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
+  const auto src_view = gil::interleaved_view(width_, height_,
+    reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
 
   switch (algorithm) {
     case NEAREST_NEIGHBOUR:
@@ -344,6 +354,9 @@ int Image::LoadImgData(std::string& filename, ImgFormat format) {
       size_ = gif_->GetInfos().height * gif_->GetInfos().width * 4;
       break;
     }
+    case AVIF:
+      DecodeAvif(filename);
+      break;
 		default:
 			return 1;
 	}
@@ -545,6 +558,108 @@ int Image::DecodeBmp(gil::rgba8_image_t image, std::string& filename) {
 	std::copy(decoded, decoded + size_, data_.begin());
 
 	return 0;
+}
+
+int Image::DecodeAvif(std::string& filename) {
+  avifRGBImage rgb;
+  memset(&rgb, 0, sizeof(rgb));
+
+  auto* decoder = avifDecoderCreate();
+
+  avifResult result = avifDecoderSetIOFile(decoder, filename.c_str());
+  if (result != AVIF_RESULT_OK) {
+    std::cerr << "Cannot open avif file" << std::endl;
+    CleanupAvif(&rgb, decoder);
+
+    return 1;
+  }
+
+  result = avifDecoderParse(decoder);
+  if (result != AVIF_RESULT_OK) {
+    std::cerr << "Failed to decode avif image" << std::endl;
+    CleanupAvif(&rgb, decoder);
+
+    return 1;
+  }
+
+  auto* img = decoder->image;
+
+  width_ = img->width;
+  height_ = img->height;
+  const auto bit_depth = img->depth;
+  alpha_ = decoder->alphaPresent;
+
+  // RGBA vs RGB
+  auto const channel_count = alpha_ ? 4 : 3;
+  size_ = width_ * height_ * channel_count;
+
+  while (avifDecoderNextImage(decoder) == AVIF_RESULT_OK) {
+    avifRGBImageSetDefaults(&rgb, decoder->image);
+
+    rgb.format = alpha_ ? AVIF_RGB_FORMAT_RGBA : AVIF_RGB_FORMAT_RGB;
+
+    avifRGBImageAllocatePixels(&rgb);
+
+    auto format_conversion_result = avifImageYUVToRGB(decoder->image, &rgb);
+    if (format_conversion_result != AVIF_RESULT_OK) {
+      std::cerr << "Conversion from YUV to RGB for avif image failed";
+      CleanupAvif(&rgb, decoder);
+      return 1;
+    }
+
+    // Avif supports 8, 10 and 12 bit depths
+    switch (bit_depth) {
+      case 8:
+        data_.reserve(size_);
+        std::copy(rgb.pixels, rgb.pixels + size_, data_.begin());
+        break;
+      case 10:
+        // libavif uses two bytes per color per pixel for bit depths > 8
+        data_.reserve(size_);
+
+        for (auto i = 0; i < size_ * 2; i += 2) {
+          ConvertBitdepthTenToEight((uint16_t&)(rgb.pixels[i]), &(data_[i / 2]));
+        }
+        break;
+      case 12:
+        // libavif uses two bytes per color per pixel for bit depths > 8
+        data_.reserve(size_);
+
+        for (auto i = 0; i < size_ * 2; i += 2) {
+          ConvertBitdepthTwelveToEight((uint16_t&)(rgb.pixels[i]), &(data_[i / 2]));
+        }
+        break;
+      default:
+        std::cerr << "Invalid or unsupported avif bit depth" << std::endl;
+        return 1;
+    }
+
+    // For now we just return, multi-image avif images are to be supported later
+    return 0;
+  }
+
+  return 0;
+}
+
+inline void Image::CleanupAvif(avifRGBImage* rgb, avifDecoder* decoder) {
+  avifRGBImageFreePixels(rgb);
+  avifDecoderDestroy(decoder);
+}
+
+/* The choice of constants makes sure that the minimum and maximum 8 bit outputs are
+  mapped only to the minimum and maximum value. This means that only 0 will produce
+  a target of 0 and only an input of 0b111111111111 (maximum 12-bit value) will
+  produce the 8-bit maximum of 0xFF*/
+inline void Image::ConvertBitdepthTenToEight(uint16_t& pixel, uint8_t* target) {
+  *target = ((pixel * DEPTH_EIGHT_MULTIPLICATOR) + TEN_TO_EIGHT_DIVISOR_CH) / TEN_TO_EIGHT_DIVISOR;
+}
+
+/* The choice of constants makes sure that the minimum and maximum 8 bit outputs are
+  mapped only to the minimum and maximum input value. This means that only 0 will produce
+  a target of 0 and only an input of 0b1111111111 (maximum 10-bit value) will
+  produce the 8-bit maximum of 0xFF*/
+inline void Image::ConvertBitdepthTwelveToEight(uint16_t& pixel, uint8_t* target) {
+  *target = ((pixel * DEPTH_EIGHT_MULTIPLICATOR) + TWELVE_TO_EIGHT_DIVISOR_CH) / TWELVE_TO_EIGHT_DIVISOR;
 }
 
 /* Encoding method for WebP only 

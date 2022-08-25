@@ -7,6 +7,8 @@
 #include "encode.h"
 #include "imagy.h"
 
+#include "avif.h"
+
 #include <chrono>
 #include <boost/gil/extension/io/jpeg.hpp>
 
@@ -17,11 +19,12 @@ int main(int argc, const char* argv[]) {
   auto end = std::chrono::system_clock::now();
   auto diff = std::chrono::duration_cast <std::chrono::milliseconds> (end - start).count();
 
-  std::string input = "../../../tests/media/cat.tiff";
+  std::string input = "../../../tests/media/cat.avif";
   std::string output = "cat_out.jpg";
 
   auto img = imagy::Image(input);
-  img.WriteImgToFile(output, imagy::BMP);
+  std::cout << img.GetWidth() << std::endl;
+  img.WriteImgToFile(output, imagy::JPEG);
 
   std::cout << "Done" << std::endl;
 

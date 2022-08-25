@@ -18,7 +18,9 @@
 #include <boost/gil/extension/io/tiff.hpp>
 #include <boost/gil/extension/numeric/resample.hpp>
 #include <boost/gil/extension/numeric/sampler.hpp>
-
+// Avif
+#include "avif.h"
+// File IO utils and gif decoder
 #include "file_io.h"
 #include "gif_decode.h"
 
@@ -41,6 +43,7 @@ enum ImgFormat {
   WEBP,
   GIF,
   TIFF,
+  AVIF,
 
 	// always have this as last entry
 	INVALID = 99,
@@ -66,6 +69,7 @@ const static std::vector<uint8_t> PNG_SIG = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A
 const static std::vector<uint8_t> BMP_SIG = { 0x42, 0x4D };
 const static std::vector<uint8_t> WEBP_SIG = { 0x57, 0x45, 0x42, 0x50 };
 const static std::vector<uint8_t> TIFF_SIG = { 0x49, 0x49, 0x2A };
+const static std::vector<uint8_t> AVIF_SIG = { 0x61, 0x76, 0x69, 0x66 };
 
 // Tuple types: File header/signature, Offset of signature begin, corresponding file type
 static inline std::vector<std::tuple<const std::vector<uint8_t>, int, ImgFormat>> img_signatures {
@@ -74,8 +78,16 @@ static inline std::vector<std::tuple<const std::vector<uint8_t>, int, ImgFormat>
 	std::tuple(PNG_SIG, 0, PNG),
 	std::tuple(BMP_SIG, 0, BMP),
 	std::tuple(WEBP_SIG, 8, WEBP),
-	std::tuple(TIFF_SIG, 0, TIFF)
+	std::tuple(TIFF_SIG, 0, TIFF),
+	std::tuple(TIFF_SIG, 8, AVIF)
 };
+
+// Avif constants
+constexpr unsigned int DEPTH_EIGHT_MULTIPLICATOR = 1 << 8;
+const unsigned int TEN_TO_EIGHT_DIVISOR = 0x807;
+constexpr unsigned int TEN_TO_EIGHT_DIVISOR_CH = 0x807 - 1; // CH = ceiling helper
+const unsigned TWELVE_TO_EIGHT_DIVISOR = 0x101f;
+constexpr unsigned int TWELVE_TO_EIGHT_DIVISOR_CH = 0x101f - 1;
 
 class Image {
 public:
@@ -107,6 +119,10 @@ private:
   int DecodeTiff(gil::rgb8_image_t image, std::string& filename);
   int DecodeBmp(gil::rgb8_image_t image, std::string& filename);
   int DecodeBmp(gil::rgba8_image_t image, std::string& filename);
+  int DecodeAvif(std::string& filename);
+  inline void CleanupAvif(avifRGBImage* rgb, avifDecoder* decoder);
+  inline void ConvertBitdepthTenToEight(uint16_t& pixel, uint8_t* target);
+  inline void ConvertBitdepthTwelveToEight(uint16_t& pixel, uint8_t* target);
 
   int EncodeWebp(uint8_t** out_data, int& out_length);
   int DecodeGif(std::string filename);

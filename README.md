@@ -11,6 +11,7 @@ ls /lib/x86_64-linux-gnu/ | grep -E '^libc-[0-9]\.[0-9]{1,2}\.so$'
 ### Supported Image Formats:
 - Conversion in all directions: BMP, PNG, JPEG, WEBP, TIFF
 - Conversion in one direction only: GIF -> animated WEBP
+- [experimental] Conversion in one direction only: AVIF -> BMP, PNG, JPEG, WEBP, TIFF
 ### Image Manipulation:
 - Resizing (unanimated images only)
 - Flipping (unanimated images only)
@@ -158,8 +159,7 @@ If that doesnt help, try running the `node-gyp` commands in sequence: `node-gyp 
 
 ## TODO:
 - Expand the README
-- Implement more image manipulation options
-- Support more formats
+- Support more formats (working on jpeg 2000 and avif)
 - Expose the libweb configs api to enable finetuning of animated images
 
 ## Attributions

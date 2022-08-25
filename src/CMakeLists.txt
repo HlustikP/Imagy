@@ -81,7 +81,7 @@ if(WIN32)
 endif()
 
 if(UNIX)
-    target_link_libraries(imagy_test
+    target_link_libraries(image
         "/usr/local/lib/libpng16.a"
         "/opt/libjpeg-turbo/lib64/libjpeg.a"
         "/usr/local/lib/libwebpmux.a"
@@ -91,6 +91,7 @@ if(UNIX)
         "/usr/local/lib/libtiff.a"
         "/usr/local/lib/libz.a"
         "/usr/local/lib/libavif.a"
+        "${CMAKE_SOURCE_DIR}/src/libs/linux-release/libgav1.a"
     )
 endif()
 

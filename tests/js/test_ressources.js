@@ -51,8 +51,8 @@ const imageProcessing = {
         },
         avif: {
             testFile: resolve(__dirname, '../media/cat.avif'),
-            targetFile: resolve(__dirname, '../media_output/cat.jpg'),
-            targetHash: 'af64d6890bd919974689ea2eac1eb780e9e39851a56f4a516578d033db1d4278',
+            targetFile: resolve(__dirname, '../media_output/cat.avif'),
+            targetHash: '694dc030329c45f40656b6b2bf4540e9c1009ee9cdaaa7f9bd74f1a5cfb3067c',
         },
     },
     rescaling: {

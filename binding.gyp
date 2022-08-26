@@ -36,7 +36,8 @@
           'zlib',
           'avif',
           'libgav1',
-          'absl'
+          'absl',
+          'SvtAv1Enc'
 			  ],
 	  },
 		'configurations': {

@@ -20,11 +20,11 @@ int main(int argc, const char* argv[]) {
   auto diff = std::chrono::duration_cast <std::chrono::milliseconds> (end - start).count();
 
   std::string input = "../../../tests/media/cat.avif";
-  std::string output = "cat_out.jpg";
+  std::string output = "cat_out.avif";
 
   auto img = imagy::Image(input);
   std::cout << img.GetWidth() << std::endl;
-  img.WriteImgToFile(output, imagy::JPEG);
+  img.WriteImgToFile(output, imagy::AVIF);
 
   std::cout << "Done" << std::endl;
 
@@ -32,6 +32,5 @@ int main(int argc, const char* argv[]) {
   diff = std::chrono::duration_cast<std::chrono::milliseconds> (end - start).count();
   std::cout << "Time elapsed: " << diff << "ms" << std::endl;
 
-	std::cin.get();
 	return 0;
 }

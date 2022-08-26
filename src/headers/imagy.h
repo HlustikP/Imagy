@@ -89,6 +89,8 @@ constexpr unsigned int TEN_TO_EIGHT_DIVISOR_CH = 0x807 - 1; // CH = ceiling help
 const unsigned TWELVE_TO_EIGHT_DIVISOR = 0x101f;
 constexpr unsigned int TWELVE_TO_EIGHT_DIVISOR_CH = 0x101f - 1;
 
+const int DEFAULT_BIT_DEPTH = 8;
+
 class Image {
 public:
   Image(std::string& filename);
@@ -120,7 +122,9 @@ private:
   int DecodeBmp(gil::rgb8_image_t image, std::string& filename);
   int DecodeBmp(gil::rgba8_image_t image, std::string& filename);
   int DecodeAvif(std::string& filename);
-  inline void CleanupAvif(avifRGBImage* rgb, avifDecoder* decoder);
+  int EncodeAvif(std::string& filename);
+  inline void CleanupAvifDecoder(avifRGBImage* rgb, avifDecoder* decoder);
+  inline void CleanupAvifEncoder(avifRGBImage* rgb, avifEncoder* encoder, avifRWData* avifOutput, avifImage* image);
   inline void ConvertBitdepthTenToEight(uint16_t& pixel, uint8_t* target);
   inline void ConvertBitdepthTwelveToEight(uint16_t& pixel, uint8_t* target);
 

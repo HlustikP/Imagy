@@ -2,6 +2,8 @@
 #include "imagy.h"
 #include "imagy.h"
 #include "imagy.h"
+#include "imagy.h"
+#include "imagy.h"
 
 namespace imagy
 {
@@ -370,25 +372,29 @@ int Image::WriteImgToFile(std::string& filename, ImgFormat format) {
 	switch (format) {
 	case BMP: {
 		const auto byte_rowsize = alpha_ ? width_ * 4 : width_ * 3;
-		const auto view = gil::interleaved_view(width_, height_, reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
+		const auto view = gil::interleaved_view(width_, height_,
+      reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
 		gil::write_view(filename, view, gil::bmp_tag());
 		break;
 	}
 	case JPEG: {
 		const auto byte_rowsize = width_ * 3;
-		const auto view = gil::interleaved_view(width_, height_, reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
+		const auto view = gil::interleaved_view(width_, height_,
+      reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
 		gil::write_view(filename, view, gil::jpeg_tag());
 		break;
 	}
 	case PNG: {
 		const auto byte_rowsize = alpha_ ? width_ * 4 : width_ * 3;
-		const auto view = gil::interleaved_view(width_, height_, reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
+		const auto view = gil::interleaved_view(width_, height_,
+      reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
 		gil::write_view(filename, view, gil::png_tag());
 		break;
 	}
   case TIFF: {
     const auto byte_rowsize = alpha_ ? width_ * 4 : width_ * 3;
-    const auto view = gil::interleaved_view(width_, height_, reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
+    const auto view = gil::interleaved_view(width_, height_,
+      reinterpret_cast<gil::rgb8_pixel_t*>(&data_[0]), byte_rowsize);
     gil::write_view(filename, view, gil::tiff_tag());
     break;
   }
@@ -412,6 +418,9 @@ int Image::WriteImgToFile(std::string& filename, ImgFormat format) {
     }
 		break;
 	}
+  case AVIF:
+    EncodeAvif(filename);
+    break;
 	default:
 		return 2;
 	}
@@ -569,7 +578,7 @@ int Image::DecodeAvif(std::string& filename) {
   avifResult result = avifDecoderSetIOFile(decoder, filename.c_str());
   if (result != AVIF_RESULT_OK) {
     std::cerr << "Cannot open avif file" << std::endl;
-    CleanupAvif(&rgb, decoder);
+    CleanupAvifDecoder(&rgb, decoder);
 
     return 1;
   }
@@ -577,7 +586,7 @@ int Image::DecodeAvif(std::string& filename) {
   result = avifDecoderParse(decoder);
   if (result != AVIF_RESULT_OK) {
     std::cerr << "Failed to decode avif image" << std::endl;
-    CleanupAvif(&rgb, decoder);
+    CleanupAvifDecoder(&rgb, decoder);
 
     return 1;
   }
@@ -603,7 +612,7 @@ int Image::DecodeAvif(std::string& filename) {
     auto format_conversion_result = avifImageYUVToRGB(decoder->image, &rgb);
     if (format_conversion_result != AVIF_RESULT_OK) {
       std::cerr << "Conversion from YUV to RGB for avif image failed";
-      CleanupAvif(&rgb, decoder);
+      CleanupAvifDecoder(&rgb, decoder);
       return 1;
     }
 
@@ -641,9 +650,72 @@ int Image::DecodeAvif(std::string& filename) {
   return 0;
 }
 
-inline void Image::CleanupAvif(avifRGBImage* rgb, avifDecoder* decoder) {
+int Image::EncodeAvif(std::string& filename) {
+  avifEncoder* encoder = nullptr;
+  avifRWData avifOutput = AVIF_DATA_EMPTY;
+  avifRGBImage rgb;
+  memset(&rgb, 0, sizeof(rgb));
+
+  // SVT coder(current encoder codec of choice) only supports up to YUV420
+  avifImage* image = avifImageCreate(width_, height_, DEFAULT_BIT_DEPTH, AVIF_PIXEL_FORMAT_YUV420);
+
+  avifRGBImageSetDefaults(&rgb, image);
+
+  // Let rgb borrow our internal pixel data
+  rgb.pixels = &(data_[0]);
+  rgb.format = alpha_ ? AVIF_RGB_FORMAT_RGBA : AVIF_RGB_FORMAT_RGB;
+  rgb.rowBytes = width_ * (alpha_ ? 4 : 3);
+
+  avifResult convertResult = avifImageRGBToYUV(image, &rgb);
+  if (convertResult != AVIF_RESULT_OK) {
+    std::cerr << "Failed to convert image data to YUV" << std::endl;
+    CleanupAvifEncoder(&rgb, encoder, &avifOutput, image);
+
+    return 1;
+  }
+
+  encoder = avifEncoderCreate();
+
+  avifResult addImageResult = avifEncoderAddImage(encoder, image, 1, AVIF_ADD_IMAGE_FLAG_SINGLE);
+  if (addImageResult != AVIF_RESULT_OK) {
+    std::cerr << "Failed to add avif image to encoder" << std::endl;
+    CleanupAvifEncoder(&rgb, encoder, &avifOutput, image);
+
+    return 1;
+  }
+
+  avifResult finishResult = avifEncoderFinish(encoder, &avifOutput);
+  if (finishResult != AVIF_RESULT_OK) {
+    std::cerr << "Failed to finish avif encoding" << std::endl;
+    CleanupAvifEncoder(&rgb, encoder, &avifOutput, image);
+
+    return 1;
+  }
+
+  utils::FileIO::WriteToFile((char*)(avifOutput.data), filename, avifOutput.size);
+
+  CleanupAvifEncoder(&rgb, encoder, &avifOutput, image);
+
+  return 0;
+}
+
+inline void Image::CleanupAvifDecoder(avifRGBImage* rgb, avifDecoder* decoder) {
   avifRGBImageFreePixels(rgb);
   avifDecoderDestroy(decoder);
+}
+
+inline void Image::CleanupAvifEncoder(avifRGBImage* rgb, avifEncoder* encoder, avifRWData* avifOutput, avifImage* image) {
+  if (image != nullptr) {
+    avifImageDestroy(image);
+  }
+  if (encoder != nullptr) {
+    avifEncoderDestroy(encoder);
+  }
+  avifRWDataFree(avifOutput);
+
+  /* Set pixels pointer to nullptr so that it becomes the Image class' obligation to free the memory
+    and we dont run into a potential double-free situation */
+  rgb->pixels = nullptr;
 }
 
 /* The choice of constants makes sure that the minimum and maximum 8 bit outputs are
@@ -662,10 +734,8 @@ inline void Image::ConvertBitdepthTwelveToEight(uint16_t& pixel, uint8_t* target
   *target = ((pixel * DEPTH_EIGHT_MULTIPLICATOR) + TWELVE_TO_EIGHT_DIVISOR_CH) / TWELVE_TO_EIGHT_DIVISOR;
 }
 
-/* Encoding method for WebP only 
-	writes data into array pointed to by out_data
-	and the data length into the out_length out parameter
-	returns 0 on success and 1 on error*/
+/* Encoding method for WebP only. Writes data into array pointed to by out_data
+	and the data length into the out_length out parameter returns 0 on success and 1 on error*/
 int Image::EncodeWebp(uint8_t** out_data, int& out_length) {
 	out_length = alpha_ ?
 		WebPEncodeRGBA(&data_[0], width_, height_, width_ * 4, 100, out_data) :

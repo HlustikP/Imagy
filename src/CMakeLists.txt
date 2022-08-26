@@ -73,6 +73,7 @@ if(WIN32)
         ${libavif_dir}/avif.lib
         ${libavif_dir}/libgav1.lib
         ${libavif_dir}/absl.lib
+        ${libavif_dir}/SvtAv1Enc.lib
     )
     set(WIN_LIBS ${WIN_LIBS} PARENT_SCOPE)
 

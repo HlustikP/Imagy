@@ -95,6 +95,21 @@ TEST(Image, Tiff) {
   delete[] output_img_data;
 }
 
+TEST(Image, Avif) {
+  int length = 0;
+  std::string file_content;
+  imagy::Image img(test::avif::test_file);
+  img.WriteImgToFile(test::avif::target_file, imagy::ImgFormat::JPEG);
+  auto output_img_data = utils::FileIO::GetDataFromFile(test::avif::target_file, &length);
+
+  file_content.assign(output_img_data, length);
+
+  auto test_string = hashString(file_content);
+
+  EXPECT_EQ(test_string, test::avif::target_hash);
+  delete[] output_img_data;
+}
+
 TEST(Manipulation, FlipD) {
   int length = 0;
   std::string file_content;

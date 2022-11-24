@@ -1,7 +1,4 @@
 #include "imagy.h"
-#include "imagy.h"
-#include "imagy.h"
-#include "imagy.h"
 
 namespace imagy
 {
